@@ -8,7 +8,7 @@ description: "All API requests require an API key. Keys are scoped to your organ
 API keys are managed in your ClassQuill organisation settings:
 
 1. Log in to ClassQuill as an **org owner** or **admin**
-2. Go to **Settings → Integrations → API Keys**
+2. Go to **Settings → Developers**
 3. Click **Create new key**, give it a name (e.g. "Xero integration"), and optionally set an expiry date
 4. Copy the key — **it is shown only once and cannot be retrieved again**
 
@@ -49,11 +49,28 @@ All ClassQuill API keys start with `ei_live_` followed by 64 hex characters:
 ei_live_5961c2b7cf00623bc536b6f520fc915771de86c6517b825f406fd3a184d9a7f5
 ```
 
+## Scopes & permissions
+
+Every key is granted one or more **scopes** when you create it, which control what it can do:
+
+| Scope | Grants |
+|-------|--------|
+| `read` | Read-only access to all your org's data (the default) |
+| `payments:write` | Record manual/external payments |
+| `tutors:write` | Update tutor profiles |
+| `payroll:write` | Create payroll adjustments |
+| `coursework:write` | Create and update lesson plans |
+| `sessions:write` | Create and complete sessions |
+| `accounts:write` | Create student, tutor and parent accounts |
+| `write` | Umbrella covering the write scopes above (excludes `sessions:write` and `accounts:write`, which must be granted explicitly) |
+
+New keys are **read-only by default** — grant a write scope only when an integration needs to change data. A request to a write endpoint with a read-only key returns `403`.
+
 ## Key security
 
 - Keys are stored as SHA-256 hashes — even ClassQuill cannot retrieve the raw key after creation
 - Keys are scoped to your organisation — they cannot access another org's data
-- If a key is compromised, revoke it immediately in Settings → Integrations → API Keys
+- If a key is compromised, revoke it immediately in Settings → Developers
 
 ## Key rotation
 
