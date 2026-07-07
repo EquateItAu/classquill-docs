@@ -70,6 +70,12 @@
               "guides/ai/practice-questions",
               "guides/ai/ai-study-assistant"
             ]
+          },
+          {
+            "group": "Blog & Content",
+            "pages": [
+              "guides/blog/publishing-your-blog"
+            ]
           }
         ]
       },
@@ -78,7 +84,12 @@
         "groups": [
           {
             "group": "Getting Started",
-            "pages": ["introduction", "authentication", "quickstart", "connect-ai-tools"]
+            "pages": [
+              "introduction",
+              "authentication",
+              "quickstart",
+              "connect-ai-tools"
+            ]
           },
           {
             "group": "Endpoints",

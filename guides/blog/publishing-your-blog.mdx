@@ -1,0 +1,75 @@
+---
+title: "Publishing your blog"
+description: "Write posts once in ClassQuill and choose how they reach readers — a hosted blog, your own domain, a widget on your existing site, or fully custom via the API."
+---
+
+## How it works
+
+Your blog posts live in ClassQuill. You write them once, and they're **live within a couple of minutes — no rebuild, no developer.** How and where they appear is a separate choice, and you can change it any time without rewriting a single post.
+
+<Info>
+Every published post is **server-rendered**, so it's fully search-optimised and link previews (the image + title card on Facebook, LinkedIn, WhatsApp, etc.) work correctly out of the box.
+</Info>
+
+## Four ways to deliver your blog
+
+<CardGroup cols={2}>
+  <Card title="Hosted blog (subdomain)" icon="globe">
+    Live instantly at `yourname.classquill.com/blog`. No setup, full SEO. The right default for most.
+  </Card>
+  <Card title="Hosted on your own domain" icon="link">
+    Serve it from `blog.yourcompany.com`. Full SEO, your brand. One CNAME to connect.
+  </Card>
+  <Card title="Recent-posts widget" icon="code">
+    Drop a snippet into your existing website to show a "latest posts" strip. Teaser only — see the note below.
+  </Card>
+  <Card title="Headless (API)" icon="terminal">
+    Have a developer? Pull your posts from the API and render them however you like.
+  </Card>
+</CardGroup>
+
+| Option | SEO | Effort | Best for |
+| --- | --- | --- | --- |
+| Hosted subdomain | ✅ Full | None | No website yet, or zero setup |
+| Hosted custom domain | ✅ Full | Connect a domain | On your own brand |
+| Recent-posts widget | ⚠️ Weak | Paste a snippet | A teaser on an existing homepage |
+| Headless (API) | ✅ Full *if server-rendered* | Needs a developer | Full design control |
+
+## Hosted (recommended)
+
+The simplest path. Publish a post in ClassQuill and it's live at your blog URL, automatically wearing **your** logo, colours, and name.
+
+- **Free subdomain** — `yourname.classquill.com/blog` works the moment you publish. No DNS, no cost.
+- **Your own domain** — connect `blog.yourcompany.com` (one CNAME). Same rendering, same SEO, your brand.
+
+Both are fully server-rendered, so search engines and social platforms see complete pages.
+
+## The recent-posts widget
+
+A one-line snippet you paste into your existing website to show a few recent posts.
+
+<Warning>
+**Use the widget for a teaser, not your whole blog.** It loads posts in the visitor's browser, so search engines don't index it well. For a search-optimised blog, use a **hosted** option above (or headless with server-side rendering) and let the widget just link to it.
+</Warning>
+
+## Headless — build your own frontend
+
+If you'd rather design the blog yourself, use the API. Your posts stay in ClassQuill; your site renders them.
+
+- **Read published posts** (no key needed — the content is public):
+
+```bash
+curl "https://<your-project>.supabase.co/functions/v1/org-blog-public?slug=yourname"
+```
+
+Returns each post's title, rendered HTML, images, dates, tags, and SEO fields — everything you need to render a blog.
+
+- **Manage posts programmatically** (create/update/delete) via the authenticated REST API — see the [API Reference](/introduction) for `POST/GET/PATCH/DELETE /v1/blog-posts`.
+
+<Tip>
+For good SEO when going headless, render on your **server** (SSR/static), not in the browser — the same way the hosted blog does it. Fetching the API from browser JavaScript alone has the same SEO weakness as the widget.
+</Tip>
+
+## Branding & customisation
+
+Hosted blogs automatically use your organisation's **logo, brand colour, and name**. More customisation (fonts, footer links, layout themes) is on the roadmap; until then, the headless API is the escape hatch for a completely bespoke design.
