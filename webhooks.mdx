@@ -1,0 +1,163 @@
+---
+title: "Webhooks"
+description: "Get a signed HTTP POST the moment something happens in your organisation."
+---
+
+## What are webhooks?
+
+Instead of polling the [REST API](/introduction) on a cron, register a webhook
+endpoint and EquateIt will **POST a signed event to your URL** the moment
+something changes — a session completes, a payment lands, an invoice is paid, a
+lead arrives. Pipe those events straight into your CRM, Zapier/Make, Slack, or a
+data warehouse.
+
+Each event body is byte-identical to the matching `/v1` resource, so you already
+know its shape.
+
+## Create an endpoint
+
+In **Settings → Developers → Webhooks** (org admins only):
+
+1. Click **Add endpoint** and enter your HTTPS URL.
+2. Tick the events you want to receive.
+3. Copy the **signing secret** — it is shown **once**. Store it now; you can't
+   retrieve it again (you can rotate it later).
+
+Your URL must use `https://` on port 443. URLs that resolve to private,
+loopback, or link-local addresses are rejected (SSRF protection), both when you
+create the endpoint and again at delivery time.
+
+Use **Send test event** to fire a synthetic `webhook.ping` and confirm your
+signature-verification wiring before relying on real events.
+
+## Event catalog
+
+| Event `type` | Fires when |
+|---|---|
+| `session.created` | a tutoring session is created |
+| `session.completed` | a session transitions to `completed` |
+| `session.cancelled` | a session transitions to `cancelled` |
+| `payment.received` | a payment transitions to `succeeded` |
+| `invoice.created` | an invoice is created (`open`/`draft`) |
+| `invoice.paid` | an invoice transitions to `paid` |
+| `lead.created` | an inbound lead is captured |
+| `booking_request.created` | an inbound booking request is captured |
+
+Subscribe to `*` to receive all current **and future** event types.
+
+## Payload shape
+
+Every delivery is a JSON envelope. The `data` block is exactly the `/v1`
+resource shape (e.g. `session.*` → the [Session](/introduction) object).
+
+```json
+{
+  "id": "evt_3f1c…",
+  "type": "session.completed",
+  "schema_version": "2026-06-02",
+  "created_at": "2026-06-02T04:11:00Z",
+  "org_id": "8b2a…",
+  "data": {
+    "id": "…",
+    "status": "completed",
+    "tutor_id": "…",
+    "student_id": "…",
+    "starts_at": "…",
+    "ends_at": "…",
+    "duration_minutes": 60,
+    "rate_cents": 9000,
+    "subject_id": "methods_34",
+    "created_at": "…"
+  }
+}
+```
+
+## Headers
+
+| Header | Meaning |
+|---|---|
+| `EquateIt-Signature` | `t=<unix_ts>,v1=<hex hmac_sha256>` — see below |
+| `EquateIt-Event-Id` | `evt_<uuid>` — stable across redeliveries; use it to dedupe |
+| `EquateIt-Event-Type` | the event `type` |
+
+## Verify the signature
+
+We compute `HMAC-SHA256(secret, "{t}.{raw_body}")` — over the timestamp **and**
+the raw body, so a captured body can't be replayed with a different timestamp.
+Recompute it with your secret, compare in constant time, and reject anything
+older than **5 minutes**.
+
+<CodeGroup>
+
+```javascript Node.js
+import crypto from "node:crypto";
+
+const TOLERANCE_SECONDS = 300;
+
+// `rawBody` MUST be the exact bytes received (don't re-serialise the parsed JSON).
+export function verify(rawBody, signatureHeader, secret) {
+  const parts = Object.fromEntries(
+    signatureHeader.split(",").map((p) => p.split("=")),
+  );
+  const t = Number(parts.t);
+  if (Math.abs(Date.now() / 1000 - t) > TOLERANCE_SECONDS) return false;
+
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(`${t}.${rawBody}`)
+    .digest("hex");
+
+  const a = Buffer.from(expected);
+  const b = Buffer.from(parts.v1);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+```
+
+```python Python
+import hashlib
+import hmac
+import time
+
+TOLERANCE_SECONDS = 300
+
+
+def verify(raw_body: bytes, signature_header: str, secret: str) -> bool:
+    parts = dict(p.split("=", 1) for p in signature_header.split(","))
+    t = int(parts["t"])
+    if abs(time.time() - t) > TOLERANCE_SECONDS:
+        return False
+
+    expected = hmac.new(
+        secret.encode(),
+        f"{t}.".encode() + raw_body,
+        hashlib.sha256,
+    ).hexdigest()
+    return hmac.compare_digest(expected, parts["v1"])
+```
+
+</CodeGroup>
+
+Respond with any `2xx` status to acknowledge receipt. Anything else (or a
+timeout) is treated as a failure and retried.
+
+## Idempotency & ordering
+
+Delivery is **at-least-once** and may arrive **out of order**. Dedupe on
+`EquateIt-Event-Id` — it is stable across automatic retries and manual
+redeliveries of the same event.
+
+## Retries
+
+Failed deliveries retry with exponential backoff (30s, 60s, 2m, 4m … capped at
+6 hours) for up to 10 attempts. After that the delivery is dead-lettered, and an
+endpoint that fails repeatedly is auto-disabled (the org owner is notified). You
+can manually **Redeliver** any failed or dead delivery from the delivery log,
+re-enable a disabled endpoint, or **rotate** the signing secret at any time.
+
+## Security notes
+
+- We only POST to verified `https://` URLs and never follow redirects.
+- The signing secret is stored encrypted and is never shown after creation —
+  rotate it if you suspect it leaked.
+- Lead events include the lead's email and a safe subset of submitted fields;
+  analytics fields (`ip_address`, `user_agent`) are never sent.

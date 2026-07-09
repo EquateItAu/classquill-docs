@@ -1,0 +1,35 @@
+---
+title: "Errors"
+description: "HTTP status codes the API returns and what they mean."
+---
+
+The API uses standard HTTP status codes. Bodies follow FastAPI's shape — a `detail`
+field describing the problem.
+
+| Status | Meaning | Common cause |
+| --- | --- | --- |
+| `200` | OK | Request succeeded. |
+| `401` | Unauthorized | Missing, malformed, unknown, revoked, or expired API key. |
+| `403` | Forbidden | The key lacks the scope required for this endpoint. |
+| `404` | Not found | The record doesn't exist **or belongs to another organisation**. |
+| `422` | Unprocessable entity | A query parameter failed validation (e.g. `limit` over 100). |
+| `429` | Too many requests | You exceeded the [rate limit](/rate-limits). |
+
+## A note on `404`
+
+Requesting a record that belongs to a **different organisation** returns `404`, not `403`.
+This is deliberate: it prevents callers from probing which IDs exist outside their own org.
+From your key's perspective, anything outside your organisation simply does not exist.
+
+## Example
+
+```json
+{
+  "detail": { "code": 404, "message": "Not found", "data": {} }
+}
+```
+
+<Tip>
+  A `401` right after creating a key usually means the `Authorization` header is wrong.
+  It must be exactly `Token token=ei_live_...` — not `Bearer ...`.
+</Tip>

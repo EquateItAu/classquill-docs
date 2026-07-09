@@ -88,6 +88,10 @@
               "introduction",
               "authentication",
               "quickstart",
+              "pagination",
+              "rate-limits",
+              "errors",
+              "webhooks",
               "connect-ai-tools"
             ]
           },

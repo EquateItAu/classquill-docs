@@ -1,77 +1,55 @@
 ---
-title: "Connect AI Tools (MCP)"
-description: "Give Claude, Cursor, Codex and other AI tools read-only access to your ClassQuill data via the Model Context Protocol."
+title: "MCP Server"
+description: "Give AI tools read-only access to your EquateIt data using natural language."
 ---
 
-The **EquateIt MCP server** lets MCP-aware AI tools — Claude Code, Claude Desktop,
-Cursor, Windsurf, Codex and others — read your organisation's tutoring data
-(sessions, invoices, students, tutors, earnings, reports and more) on your behalf.
-You ask a question in plain English ("how much did I earn last month?", "which
-students have unpaid invoices?") and the tool pulls the answer from the API.
+## What is an MCP Server?
 
-It's the same [public REST API](/introduction) under the hood, wrapped so AI tools
-can call it. It uses your own API key and is **read-only by default** — the same
-access your key already has.
+MCP is an open protocol that standardizes how applications provide context to
+LLMs. Among other benefits, it gives LLMs tools to act on your behalf.
 
-<Note>
-  The server runs **locally on your machine** via `npx` — there's nothing to
-  install and nothing hosted by EquateIt. Your key never leaves your computer.
-</Note>
+The EquateIt MCP server lets MCP-aware tools — Claude Code, Claude Desktop,
+Cursor, Windsurf and others — read your organisation's tutoring data through the
+[EquateIt public API](/introduction). It is **read-only** and scoped to your
+org, exactly like the REST API.
+
+## What it can do
+
+One tool per public endpoint, all read-only:
+
+- **Sessions** — list and fetch tutoring sessions
+- **Tutors** — list tutors and pull per-tutor earnings
+- **Payments & invoices** — list payments received and invoices issued
+- **Students & parents** — list students, parents, and a parent's balance
+- **Curriculum** — subjects, classrooms, student groups, lesson plans, homework, results
+- **Operations** — mileage trips, expense claims, and an owner reports summary
+
+As an example, you could ask *"How much did each tutor earn last week?"* or
+*"List the invoices that are still outstanding."*
 
 ## Prerequisites
 
-<Steps>
-  <Step title="Node.js 18 or newer">
-    The server runs through `npx`, which ships with Node.js. Check with
-    `node --version`. Install from [nodejs.org](https://nodejs.org) if needed.
-  </Step>
-  <Step title="An EquateIt API key">
-    Create one in the app under **Settings → Developers → Create key** (org owners
-    and admins only). See the [Authentication guide](/authentication) for details.
-    Keys start with `ei_live_` and are shown **once** — copy it somewhere safe.
-  </Step>
-</Steps>
+- [Node.js](https://nodejs.org) 18 or later
+- An EquateIt API key — create one in **Settings → Developers** (org admins
+  only). See [Authentication](/authentication).
 
-## Add EquateIt to your tool
+## How to use the MCP Server
 
-Pick your tool below. In every case, replace `ei_live_your_key_here` with the key
-you created.
+The server is published to npm and runs with `npx` — there is nothing to install
+or host. Replace `ei_live_xxxxxxxxx` with your own key throughout.
+
+It supports two transports: **stdio** (default, runs locally) and **HTTP**.
+
+### Stdio (default)
 
 <Tabs>
   <Tab title="Claude Code">
-    Run this one-liner in your terminal:
-
     ```bash
-    claude mcp add equateit -e EQUATEIT_API_KEY=ei_live_your_key_here -- npx -y equateit-mcp
+    claude mcp add equateit -e EQUATEIT_API_KEY=ei_live_xxxxxxxxx -- npx -y equateit-mcp
     ```
-
-    Then start Claude Code and ask it about your data — e.g. *"Using equateit,
-    list my tutors."*
   </Tab>
-
-  <Tab title="Claude Desktop">
-    Open **Settings → Developer → Edit Config**, which opens
-    `claude_desktop_config.json`, and add:
-
-    ```json
-    {
-      "mcpServers": {
-        "equateit": {
-          "command": "npx",
-          "args": ["-y", "equateit-mcp"],
-          "env": { "EQUATEIT_API_KEY": "ei_live_your_key_here" }
-        }
-      }
-    }
-    ```
-
-    Save and restart Claude Desktop. EquateIt appears in the tools menu (the
-    slider/plug icon).
-  </Tab>
-
   <Tab title="Cursor">
-    Open **Settings → MCP → Add new global MCP server** (or edit
-    `~/.cursor/mcp.json`) and add:
+    Open the command palette → "Cursor Settings" → "MCP" → "Add new global MCP server".
 
     ```json
     {
@@ -79,112 +57,87 @@ you created.
         "equateit": {
           "command": "npx",
           "args": ["-y", "equateit-mcp"],
-          "env": { "EQUATEIT_API_KEY": "ei_live_your_key_here" }
+          "env": { "EQUATEIT_API_KEY": "ei_live_xxxxxxxxx" }
         }
       }
     }
     ```
-
-    Save; Cursor picks it up automatically.
   </Tab>
+  <Tab title="Claude Desktop">
+    Open Claude Desktop settings → "Developer" → "Edit Config".
 
+    ```json
+    {
+      "mcpServers": {
+        "equateit": {
+          "command": "npx",
+          "args": ["-y", "equateit-mcp"],
+          "env": { "EQUATEIT_API_KEY": "ei_live_xxxxxxxxx" }
+        }
+      }
+    }
+    ```
+  </Tab>
   <Tab title="Windsurf">
-    Open **Settings → Cascade → MCP Servers → Manage** (edit `mcp_config.json`)
-    and add:
-
     ```json
     {
       "mcpServers": {
         "equateit": {
           "command": "npx",
           "args": ["-y", "equateit-mcp"],
-          "env": { "EQUATEIT_API_KEY": "ei_live_your_key_here" }
+          "env": { "EQUATEIT_API_KEY": "ei_live_xxxxxxxxx" }
         }
       }
     }
-    ```
-  </Tab>
-
-  <Tab title="Codex">
-    Edit `~/.codex/config.toml` and add:
-
-    ```toml
-    [mcp_servers.equateit]
-    command = "npx"
-    args = ["-y", "equateit-mcp"]
-    env = { EQUATEIT_API_KEY = "ei_live_your_key_here" }
     ```
   </Tab>
 </Tabs>
 
-<Check>
-  Once connected, ask your tool: **"Using equateit, ping the API."** It should
-  reply with your organisation's name — that confirms the key and connection work.
-</Check>
+### HTTP transport
 
-## What it can do
+Run the server over HTTP for remote or web-based integrations. In HTTP mode each
+client authenticates by passing its API key as a Bearer token.
 
-The server exposes one read-only tool per API endpoint, so your AI tool can pull:
+Start the server:
 
-<CardGroup cols={2}>
-  <Card title="Sessions" icon="calendar-check">
-    Completed sessions, filtered by tutor, student or date.
-  </Card>
-  <Card title="Invoices & payments" icon="file-invoice">
-    Invoices, payments and balances for accounting questions.
-  </Card>
-  <Card title="Students & tutors" icon="users">
-    Rosters, profiles, subjects and contact details.
-  </Card>
-  <Card title="Earnings & reports" icon="chart-line">
-    Tutor earnings and summary reports across your org.
-  </Card>
-</CardGroup>
+```bash
+npx -y equateit-mcp --http --port 3000
+```
 
-The tool list is generated directly from the API, so it always matches the
-[current endpoints](/introduction).
+It listens on `http://127.0.0.1:3000` and exposes the MCP endpoint at `/mcp`
+using Streamable HTTP.
 
-## Security
+<Tabs>
+  <Tab title="Claude Code">
+    ```bash
+    claude mcp add equateit --transport http http://127.0.0.1:3000/mcp --header "Authorization: Bearer ei_live_xxxxxxxxx"
+    ```
+  </Tab>
+  <Tab title="Cursor">
+    ```json
+    {
+      "mcpServers": {
+        "equateit": {
+          "url": "http://127.0.0.1:3000/mcp",
+          "headers": { "Authorization": "Bearer ei_live_xxxxxxxxx" }
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
 
-<Warning>
-  Your API key is like a password. Anyone with it can read your organisation's
-  data. Never commit it to a public repo, paste it into a shared chat, or email it.
-</Warning>
+## Options
 
-- **Read-only by default.** A standard key can only read data. Write access is a
-  separate, opt-in scope you grant per key.
-- **Runs locally.** The server executes on your machine; your key isn't sent to
-  EquateIt or any third party — only to the EquateIt API, exactly as a direct API
-  call would.
-- **Revoke or rotate anytime.** In **Settings → Developers**, revoke a key to kill
-  access instantly, or rotate it to swap in a new one. Set an expiry on a key when
-  you create it if it's only needed temporarily.
+| Flag | Env var | Default | Purpose |
+|------|---------|---------|---------|
+| `--key` | `EQUATEIT_API_KEY` | — | Your `ei_live_...` key (stdio mode; HTTP mode reads the Bearer token per request). |
+| `--http` | — | off | Use HTTP transport instead of stdio. |
+| `--port` / `-p` | `MCP_PORT` | `3000` | HTTP port. |
+| — | `EQUATEIT_API_BASE_URL` | production | Backend base URL. Override to target staging. |
 
-## Troubleshooting
-
-<AccordionGroup>
-  <Accordion title="'fetch failed' or connection errors">
-    Confirm you can reach the API directly:
-    `curl https://api.classquill.com/health` should return
-    `{"status":"healthy"}`. If that works but the tool doesn't, restart the tool
-    so it reloads the config.
-  </Accordion>
-  <Accordion title="401 Unauthorized">
-    The key is missing, mistyped, revoked or expired. Check it starts with
-    `ei_live_`, and create a fresh one in **Settings → Developers** if unsure.
-  </Accordion>
-  <Accordion title="'command not found: npx'">
-    Node.js isn't installed or isn't on your PATH. Install it from
-    [nodejs.org](https://nodejs.org) and restart your terminal / tool.
-  </Accordion>
-  <Accordion title="Connecting to staging or a self-hosted API">
-    Set `EQUATEIT_API_BASE_URL` in the same `env` block (e.g. a staging URL). It
-    defaults to `https://api.classquill.com`.
-  </Accordion>
-</AccordionGroup>
-
-## Prefer raw HTTP?
-
-If you're not using an AI tool, skip MCP entirely and call the
-[REST API](/quickstart) directly — the MCP server is just a convenience wrapper
-around it.
+<Info>
+  The MCP server is a thin client over the REST API — all access control,
+  org-scoping and [rate limits](/rate-limits) are enforced by the API itself.
+  A key used here has the same read-only access it does everywhere.
+</Info>

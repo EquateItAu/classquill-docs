@@ -1,0 +1,25 @@
+---
+title: "Rate limits"
+description: "Per-key request limits and how to handle them."
+---
+
+Each API key is limited to **120 requests per minute**.
+
+When you exceed the limit, the API responds with:
+
+```
+HTTP/1.1 429 Too Many Requests
+```
+
+## Staying within the limit
+
+- **Cache** data that doesn't change often (tutors, classrooms, subjects) rather than
+  re-fetching on every run.
+- **Page efficiently** with `limit=100` instead of many small pages.
+- **Back off** on a `429`: wait, then retry with exponential backoff (e.g. 1s, 2s, 4s).
+
+<Tip>
+  Syncing to an accounting tool? Pull once on a schedule (hourly or nightly) rather than
+  polling continuously — you'll stay well under the limit and your data stays fresh enough
+  for reconciliation.
+</Tip>

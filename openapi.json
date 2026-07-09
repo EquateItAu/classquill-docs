@@ -792,7 +792,7 @@
           "Students & Parents"
         ],
         "summary": "Update Student",
-        "description": "Update a student's admin-only fields (currently `admin_notes`). 404 if the student\nisn't affiliated with your org. Returns the full student.",
+        "description": "Update a student's admin-only fields. `admin_notes` is written directly. Supplying `email`\nsets/updates the login email and clears the no-email placeholder flag; `send_invite` (default\nfalse) sends a set-password link \u2014 combine them to add an email and invite in one call.\nInviting an account that still has no real email is rejected (409). 404 if the student isn't\naffiliated with your org. Returns the full student.",
         "operationId": "update_student_v1_students__student_id__patch",
         "parameters": [
           {
@@ -1165,7 +1165,7 @@
           "Tutors"
         ],
         "summary": "Create Tutor",
-        "description": "Create a tutor (or admin) account + tutor profile; emails a set-password link.",
+        "description": "Create a tutor (or admin) account + tutor profile. `email` is optional (omit \u2192 no-email\nplaceholder account, invite later); when a real email is present and `send_invite` (default\ntrue) is set, emails a set-password link.",
         "operationId": "create_tutor_v1_tutors_post",
         "parameters": [
           {
@@ -2199,7 +2199,7 @@
           "Students & Parents"
         ],
         "summary": "Create Student",
-        "description": "Create a student account (name, subjects, phone, address, placement) and optionally a linked\nparent; emails each a set-password link. Cross-org placement targets return 404.",
+        "description": "Create a student account (name, subjects, phone, address, placement) and optionally a linked\nparent. `email` is optional (omit \u2192 no-email placeholder account, invite later); when a real\nemail is present and `send_invite` (default true) is set, emails a set-password link. Cross-org\nplacement targets return 404.",
         "operationId": "create_student_v1_students_post",
         "parameters": [
           {
@@ -2350,7 +2350,7 @@
           "Students & Parents"
         ],
         "summary": "Create Parent",
-        "description": "Create a parent account and link it to an existing org student (`student_id`); emails a\nset-password link. The student must already be an accepted student of the org (else 404).",
+        "description": "Create a parent account and link it to an existing org student (`student_id`). `email` is\noptional (omit \u2192 no-email placeholder account, invite later); when a real email is present and\n`send_invite` (default true) is set, emails a set-password link. The student must already be an\naccepted student of the org (else 404).",
         "operationId": "create_parent_v1_parents_post",
         "parameters": [
           {
@@ -5066,6 +5066,174 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Invite"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/students/{student_id}/send-invite": {
+      "post": {
+        "tags": [
+          "Students & Parents"
+        ],
+        "summary": "Send Student Invite",
+        "description": "(Re)send the set-password invite to an org student created earlier. Use this after you've\nadded an email to a no-email account (via PATCH /v1/students/{id}). 409 if the student still\nhas no real email; 404 if they aren't affiliated with your org.",
+        "operationId": "send_student_invite_v1_students__student_id__send_invite_post",
+        "parameters": [
+          {
+            "name": "student_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Student Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountInviteSent"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/parents/{parent_id}/send-invite": {
+      "post": {
+        "tags": [
+          "Students & Parents"
+        ],
+        "summary": "Send Parent Invite",
+        "description": "(Re)send the set-password invite to an org parent. 409 if they still have no real email;\n404 if they aren't linked to a student in your org.",
+        "operationId": "send_parent_invite_v1_parents__parent_id__send_invite_post",
+        "parameters": [
+          {
+            "name": "parent_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Parent Id"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountInviteSent"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/org/join-link": {
+      "get": {
+        "tags": [
+          "General"
+        ],
+        "summary": "Org Join Link",
+        "description": "The org's reusable self-signup join links + codes (student + tutor). Share these via\nFacebook/Instagram/WhatsApp \u2014 anyone who opens one is added to your org when they sign up, no\nemail needed from you. READ-ONLY: returns the existing codes (a field is null if that code\nhasn't been minted yet \u2014 call POST /v1/invites {scope:\"organization\"} to mint one). This GET\nnever writes, so it's safe under the read scope.",
+        "operationId": "org_join_link_v1_org_join_link_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgJoinLink"
                 }
               }
             }
@@ -7968,6 +8136,29 @@
         "title": "AccountCreateResult",
         "description": "Result of POST /v1/students|tutors|parents \u2014 one entry per account processed (a student with\na nested parent returns two)."
       },
+      "AccountInviteSent": {
+        "properties": {
+          "sent": {
+            "type": "boolean",
+            "title": "Sent",
+            "default": false
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "title": "AccountInviteSent",
+        "description": "Result of POST /v1/students|parents/{id}/send-invite. `sent` is true when a set-password\nemail was dispatched; `email` is the address it went to."
+      },
       "AddressIn": {
         "properties": {
           "label": {
@@ -9050,8 +9241,20 @@
             "title": "Last Name"
           },
           "email": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Email"
+          },
+          "send_invite": {
+            "type": "boolean",
+            "title": "Send Invite",
+            "default": true
           },
           "phone": {
             "anyOf": [
@@ -9070,11 +9273,10 @@
         "required": [
           "type",
           "first_name",
-          "last_name",
-          "email"
+          "last_name"
         ],
         "title": "BulkInviteParent",
-        "description": "A standalone parent row in POST /v1/users/bulk-invite. Mirrors POST /v1/parents."
+        "description": "A standalone parent row in POST /v1/users/bulk-invite. Mirrors POST /v1/parents.\n\n`send_invite` is accepted for shape-parity but a STANDALONE parent is created without an\norg link, so it is never auto-invited here (the org-scoped invite requires a student link);\nlink them to a student, then call POST /v1/parents/{id}/send-invite."
       },
       "BulkInviteRequest": {
         "properties": {
@@ -9143,7 +9345,14 @@
             "title": "Type"
           },
           "email": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Email"
           },
           "status": {
@@ -9177,6 +9386,17 @@
             ],
             "title": "Created"
           },
+          "invited": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited"
+          },
           "error": {
             "anyOf": [
               {
@@ -9193,7 +9413,6 @@
         "required": [
           "index",
           "type",
-          "email",
           "status"
         ],
         "title": "BulkInviteResultItem",
@@ -9215,8 +9434,20 @@
             "title": "Last Name"
           },
           "email": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Email"
+          },
+          "send_invite": {
+            "type": "boolean",
+            "title": "Send Invite",
+            "default": true
           },
           "phone": {
             "anyOf": [
@@ -9245,8 +9476,7 @@
         "required": [
           "type",
           "first_name",
-          "last_name",
-          "email"
+          "last_name"
         ],
         "title": "BulkInviteStudent",
         "description": "A student row in POST /v1/users/bulk-invite (optionally with a parent created +\nlinked atomically). Mirrors POST /v1/students."
@@ -9299,8 +9529,20 @@
             "title": "Last Name"
           },
           "email": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Email"
+          },
+          "send_invite": {
+            "type": "boolean",
+            "title": "Send Invite",
+            "default": true
           },
           "phone": {
             "anyOf": [
@@ -9353,8 +9595,7 @@
         "required": [
           "type",
           "first_name",
-          "last_name",
-          "email"
+          "last_name"
         ],
         "title": "BulkInviteTutor",
         "description": "A tutor (staff) row in POST /v1/users/bulk-invite. Mirrors POST /v1/tutors."
@@ -11953,6 +12194,57 @@
         "title": "OrgInboxMessage",
         "description": "An inbound visitor/stranger inquiry to the org's admin inbox (contact-only\ntutor cards + the inquiry-routing shadow). Distinct from the conversation system."
       },
+      "OrgJoinLink": {
+        "properties": {
+          "student_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Code"
+          },
+          "student_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Url"
+          },
+          "tutor_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tutor Code"
+          },
+          "tutor_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tutor Url"
+          }
+        },
+        "type": "object",
+        "title": "OrgJoinLink",
+        "description": "GET /v1/org/join-link \u2014 the org's reusable self-signup join links/codes (share via\nFacebook/Instagram/WhatsApp; no email needed from you). `student_*` adds the person as a\nstudent, `tutor_*` as a tutor. Codes are minted on first read if unset."
+      },
       "PageMeta": {
         "properties": {
           "limit": {
@@ -12653,6 +12945,17 @@
             ],
             "title": "Email"
           },
+          "placeholder_email": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Placeholder Email"
+          },
           "status": {
             "anyOf": [
               {
@@ -12730,8 +13033,20 @@
             "title": "Full Name"
           },
           "email": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Email"
+          },
+          "send_invite": {
+            "type": "boolean",
+            "title": "Send Invite",
+            "default": true
           },
           "phone_number": {
             "anyOf": [
@@ -12764,11 +13079,10 @@
         "type": "object",
         "required": [
           "full_name",
-          "email",
           "student_id"
         ],
         "title": "ParentCreate",
-        "description": "POST /v1/parents \u2192 mint a parent account and link to an EXISTING org student. scope\n`accounts:write`. `student_id` must already be an accepted student of the org (else 404)."
+        "description": "POST /v1/parents \u2192 mint a parent account and link to an EXISTING org student. scope\n`accounts:write`. `student_id` must already be an accepted student of the org (else 404).\n\n`email` is optional (omit \u2192 no-email placeholder account, invite later); `send_invite`\n(default true) gates the set-password email when a real email is present."
       },
       "ParentIn": {
         "properties": {
@@ -12777,7 +13091,14 @@
             "title": "Full Name"
           },
           "email": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Email"
           },
           "phone_number": {
@@ -12806,11 +13127,10 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "full_name",
-          "email"
+          "full_name"
         ],
         "title": "ParentIn",
-        "description": "A parent to create + link to the student being created (nested in StudentCreate)."
+        "description": "A parent to create + link to the student being created (nested in StudentCreate).\n`email` is optional \u2014 omit it to mint a no-email (placeholder) parent account."
       },
       "ParentInline": {
         "properties": {
@@ -12823,7 +13143,14 @@
             "title": "Last Name"
           },
           "email": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Email"
           },
           "phone": {
@@ -12842,11 +13169,10 @@
         "type": "object",
         "required": [
           "first_name",
-          "last_name",
-          "email"
+          "last_name"
         ],
         "title": "ParentInline",
-        "description": "A parent created alongside a student in POST /v1/students."
+        "description": "A parent created alongside a student in POST /v1/students. `email` is optional\n(omit \u2192 no-email placeholder parent account)."
       },
       "ParentStudentLink": {
         "properties": {
@@ -13337,6 +13663,28 @@
               }
             ],
             "title": "Reason"
+          },
+          "invited": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited"
+          },
+          "placeholder": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Placeholder"
           }
         },
         "type": "object",
@@ -14738,6 +15086,17 @@
             ],
             "title": "Email"
           },
+          "placeholder_email": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Placeholder Email"
+          },
           "status": {
             "anyOf": [
               {
@@ -14782,8 +15141,20 @@
             "title": "Full Name"
           },
           "email": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Email"
+          },
+          "send_invite": {
+            "type": "boolean",
+            "title": "Send Invite",
+            "default": true
           },
           "phone_number": {
             "anyOf": [
@@ -14845,11 +15216,10 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "full_name",
-          "email"
+          "full_name"
         ],
         "title": "StudentCreate",
-        "description": "POST /v1/students \u2192 mint a student account with a known name + fields, place them, and\noptionally create + link a parent. Emails a set-password link. Requires scope `accounts:write`."
+        "description": "POST /v1/students \u2192 mint a student account with a known name + fields, place them, and\noptionally create + link a parent. Requires scope `accounts:write`.\n\n`email` is OPTIONAL: omit it to create the account now (against an internal placeholder\naddress) and add a real email + invite later. `send_invite` (default true) controls whether\na set-password email is sent when a real email is present \u2014 a no-email account is never\nemailed regardless."
       },
       "StudentGroup": {
         "properties": {
@@ -14983,12 +15353,28 @@
               }
             ],
             "title": "Admin Notes"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "send_invite": {
+            "type": "boolean",
+            "title": "Send Invite",
+            "default": false
           }
         },
         "additionalProperties": false,
         "type": "object",
         "title": "StudentPatch",
-        "description": "PATCH /v1/students/{student_id} \u2014 update admin-only fields. Partial update."
+        "description": "PATCH /v1/students/{student_id} \u2014 update admin-only fields. Partial update.\n\nSupplying `email` sets/updates the student's login email (clearing the no-email\nplaceholder flag). `send_invite` (default false here \u2014 a patch doesn't email unless\nasked) sends a set-password link; combine with `email` to add an address and invite in\none call. Sending an invite to an account that still has no real email is rejected (409)."
       },
       "Subject": {
         "properties": {
@@ -15117,6 +15503,17 @@
               }
             ],
             "title": "Email"
+          },
+          "placeholder_email": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Placeholder Email"
           },
           "role": {
             "anyOf": [
@@ -15339,8 +15736,20 @@
             "title": "Full Name"
           },
           "email": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Email"
+          },
+          "send_invite": {
+            "type": "boolean",
+            "title": "Send Invite",
+            "default": true
           },
           "role": {
             "type": "string",
@@ -15355,11 +15764,10 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "full_name",
-          "email"
+          "full_name"
         ],
         "title": "TutorCreate",
-        "description": "POST /v1/tutors \u2192 mint a tutor (or admin) account + tutor profile. scope `accounts:write`."
+        "description": "POST /v1/tutors \u2192 mint a tutor (or admin) account + tutor profile. scope `accounts:write`.\n\n`email` is optional (omit \u2192 no-email placeholder account, invite later); `send_invite`\n(default true) gates the set-password email when a real email is present."
       },
       "TutorEarnings": {
         "properties": {

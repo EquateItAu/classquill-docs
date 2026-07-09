@@ -1,0 +1,53 @@
+---
+title: "Pagination"
+description: "How list endpoints page and envelope their results."
+---
+
+List endpoints return a consistent envelope:
+
+```json
+{
+  "data": [ /* records */ ],
+  "meta": { "limit": 20, "offset": 0, "count": 20 }
+}
+```
+
+## Parameters
+
+<ParamField query="limit" type="integer" default="20">
+  Records per page. Minimum `1`, maximum `100`.
+</ParamField>
+
+<ParamField query="offset" type="integer" default="0">
+  Number of records to skip. Combine with `limit` to page:
+  `?limit=50&offset=100` returns records 101–150.
+</ParamField>
+
+## The `meta` object
+
+| Field | Meaning |
+| --- | --- |
+| `limit` | The page size that was applied. |
+| `offset` | The offset that was applied. |
+| `count` | Number of records in **this** page's `data` array. |
+| `total` | Full result-set size, **when known** (present on `/tutors`, `/students`, `/parents`). |
+
+## Paging through everything
+
+Increase `offset` by `limit` until a page returns fewer than `limit` records (or, where
+`total` is present, until `offset + count >= total`):
+
+```bash
+# page 1
+curl "https://api.classquill.com/v1/payments?limit=100&offset=0" \
+  -H "Authorization: Token token=ei_live_..."
+
+# page 2
+curl "https://api.classquill.com/v1/payments?limit=100&offset=100" \
+  -H "Authorization: Token token=ei_live_..."
+```
+
+<Note>
+  Single-record and rollup endpoints (e.g. `/sessions/{id}`, `/reports/summary`,
+  `/parents/{id}/balance`) return the object directly, with no `data`/`meta` envelope.
+</Note>
