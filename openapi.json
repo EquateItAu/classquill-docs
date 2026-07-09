@@ -8718,6 +8718,17 @@
             ],
             "title": "Published At"
           },
+          "scheduled_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled At"
+          },
           "created_at": {
             "anyOf": [
               {
@@ -8907,6 +8918,18 @@
             ],
             "title": "Brand",
             "description": "Only for platform posts \u2014 which marketing surface (equateit \u2192 equateit.com.au, classquill \u2192 classquill.com). Omit for org posts."
+          },
+          "scheduled_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled At",
+            "description": "ISO 8601 datetime (e.g. '2026-08-01T09:00:00Z'). When set with status='draft', the post will be published automatically by a background job within 15 minutes of this time. Pass null to cancel a scheduled publish."
           }
         },
         "additionalProperties": false,
@@ -9067,6 +9090,18 @@
               }
             ],
             "title": "Publish To Portal"
+          },
+          "scheduled_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled At",
+            "description": "ISO 8601 datetime. Set to schedule deferred publishing; set to null to cancel a scheduled publish."
           }
         },
         "additionalProperties": false,
