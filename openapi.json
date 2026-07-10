@@ -14,24 +14,6 @@
         "summary": "Ping",
         "description": "Health check for the public API.\n\nReturns 200 with the authenticated org's ID and name when a valid API\nkey is provided. Use this to verify your key is working correctly.\n\nReturns 401 if the key is missing, invalid, revoked, or expired.",
         "operationId": "ping_v1_ping_get",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -64,24 +46,6 @@
         "summary": "Get Me",
         "description": "Return the identity of the authenticated org.\n\nWorks with both API key (Token token=ei_live_...) and OAuth 2 Bearer tokens.\nZapier calls this endpoint after authentication to confirm the connection and\ndisplay the connected account label.\n\nReturns 401 if the credential is missing, invalid, revoked, or expired.",
         "operationId": "get_me_v1_me_get",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -231,22 +195,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -280,22 +228,6 @@
         "description": "Create a SCHEDULED session.\n\nCreates a `tutor_sessions` row with status='scheduled' and a participant whose\nper-hour rate snapshot is resolved server-side from the org rate matrix. No\ncharge is initiated \u2014 settlement flows through the existing Stripe PaymentIntent\n+ webhook, and the tutor-owed ledger row is written only on completion (see PUT\n/v1/sessions/{id}/complete). `organization_id`, `creator_id`, `status`, the rate\nsnapshot, and timestamps are all server-set. `tutor_id`/`student_id` must be\norg-scoped (404 otherwise). The money-moving write runs inside a single\ntransactional RPC. Requires the `sessions:write` scope. Honours `Idempotency-Key`.",
         "operationId": "create_session_v1_sessions_post",
         "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
           {
             "name": "Idempotency-Key",
             "in": "header",
@@ -364,22 +296,6 @@
               "type": "string",
               "title": "Session Id"
             }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -420,22 +336,6 @@
             "schema": {
               "type": "string",
               "title": "Session Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           },
           {
@@ -504,22 +404,6 @@
               "type": "string",
               "title": "Session Id"
             }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -555,22 +439,6 @@
             "schema": {
               "type": "string",
               "title": "Session Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           },
           {
@@ -668,22 +536,6 @@
               "title": "Phone"
             },
             "description": "Exact phone number"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -719,22 +571,6 @@
         "description": "Bulk create/invite 1\u2013100 users \u2014 students (optionally each with a parent), tutors,\nand parents \u2014 in one call. Each row carries a `type` discriminator.\n\nAuth is all-or-nothing: the key must hold every scope the batch's row types require\n(`students:write` for student/parent rows, `tutors:write` for tutor rows) or the whole\nrequest is 403. Provisioning is then per-row and independent \u2014 one row's failure never\nrolls back the others. Each input row maps to one `results[]` entry (same order, by\n`index`) with a `status`:\n  - `ok`     \u2014 newly provisioned (`created` = whether a new login was made)\n  - `exists` \u2014 already an accepted member of this org (idempotent no-op)\n  - `error`  \u2014 could not provision (`error` carries a human-readable reason)\n\nHonours `Idempotency-Key` (the whole batch result is replayed on retry).",
         "operationId": "bulk_invite_users_v1_users_bulk_invite_post",
         "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
           {
             "name": "Idempotency-Key",
             "in": "header",
@@ -803,22 +639,6 @@
               "type": "string",
               "title": "Student Id"
             }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "requestBody": {
@@ -870,22 +690,6 @@
               "type": "string",
               "title": "Student Id"
             }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -928,22 +732,6 @@
             "schema": {
               "type": "string",
               "title": "Parent Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           }
         ],
@@ -997,22 +785,6 @@
             "schema": {
               "type": "string",
               "title": "Session Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           },
           {
@@ -1119,22 +891,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -1168,22 +924,6 @@
         "description": "Create a tutor (or admin) account + tutor profile. `email` is optional (omit \u2192 no-email\nplaceholder account, invite later); when a real email is present and `send_invite` (default\ntrue) is set, emails a set-password link.",
         "operationId": "create_tutor_v1_tutors_post",
         "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
           {
             "name": "Idempotency-Key",
             "in": "header",
@@ -1252,22 +992,6 @@
               "type": "string",
               "title": "Tutor Id"
             }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -1308,22 +1032,6 @@
             "schema": {
               "type": "string",
               "title": "Tutor Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           }
         ],
@@ -1414,22 +1122,6 @@
               "title": "Duration"
             },
             "description": "Slot length in minutes (default 60)"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -1472,22 +1164,6 @@
             "schema": {
               "type": "string",
               "title": "Student Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           }
         ],
@@ -1568,22 +1244,6 @@
               "title": "To"
             },
             "description": "Session starts_at <= ISO date"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -1735,22 +1395,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -1784,22 +1428,6 @@
         "description": "Record a MANUAL / EXTERNAL payment (cash, bank transfer, off-platform).\n\nThis endpoint NEVER initiates a real charge. `payment_type` must be `external`\n\u2014 any Stripe/processor value (single_session, group_session, package_redemption)\nis rejected with 422, because a real charge must flow through the Stripe\nPaymentIntent + webhook that keeps `session_ledger` consistent; the Python\nbackend does not own money flows.\n\n`organization_id` and `created_at` are server-set; `stripe_payment_intent_id`\nis always null. The referenced `session_id` (and any\n`student_id`/`tutor_id`) must be org-scoped (404 otherwise). Honours\n`Idempotency-Key`.",
         "operationId": "create_payment_v1_payments_post",
         "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
           {
             "name": "Idempotency-Key",
             "in": "header",
@@ -1867,22 +1495,6 @@
             "schema": {
               "type": "string",
               "title": "Payment Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           }
         ],
@@ -2017,22 +1629,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -2075,22 +1671,6 @@
             "schema": {
               "type": "string",
               "title": "Invoice Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           }
         ],
@@ -2153,22 +1733,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -2202,22 +1766,6 @@
         "description": "Create a student account (name, subjects, phone, address, placement) and optionally a linked\nparent. `email` is optional (omit \u2192 no-email placeholder account, invite later); when a real\nemail is present and `send_invite` (default true) is set, emails a set-password link. Cross-org\nplacement targets return 404.",
         "operationId": "create_student_v1_students_post",
         "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
           {
             "name": "Idempotency-Key",
             "in": "header",
@@ -2304,22 +1852,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -2353,22 +1885,6 @@
         "description": "Create a parent account and link it to an existing org student (`student_id`). `email` is\noptional (omit \u2192 no-email placeholder account, invite later); when a real email is present and\n`send_invite` (default true) is set, emails a set-password link. The student must already be an\naccepted student of the org (else 404).",
         "operationId": "create_parent_v1_parents_post",
         "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
           {
             "name": "Idempotency-Key",
             "in": "header",
@@ -2437,22 +1953,6 @@
               "type": "string",
               "title": "Parent Id"
             }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -2496,22 +1996,6 @@
               "type": "string",
               "title": "Parent Id"
             }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -2546,24 +2030,6 @@
         "summary": "List Subjects",
         "description": "The subjects the org teaches, derived from the subject IDs on its sessions.\n`name` mirrors `id` for now (EquateIt has no subjects table \u2014 subjects are\nconfig-defined identifiers like `methods_34`).",
         "operationId": "list_subjects_v1_subjects_get",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -2677,22 +2143,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -2726,22 +2176,6 @@
         "description": "Create a lesson plan \u2014 a tutor-authored, curriculum-aware teaching plan.\n\n`created_by` (the key's creator), `created_at`, and `updated_at` are server-set.\nAny referenced `classroom_id`/`group_id`/`student_id` must belong to your org\n(404 otherwise). Honours `Idempotency-Key` on retry.",
         "operationId": "create_lesson_plan_v1_lesson_plans_post",
         "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
           {
             "name": "Idempotency-Key",
             "in": "header",
@@ -2809,22 +2243,6 @@
             "schema": {
               "type": "string",
               "title": "Plan Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           }
         ],
@@ -2951,22 +2369,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -3064,22 +2466,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -3195,22 +2581,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -3244,22 +2614,6 @@
         "description": "Create a question in your org's private question bank.\n\nThe question is stamped with `organization_id` (the calling org) and no\n`user_id` \u2014 org-owned content survives individual tutor turnover. It then\nappears in the default `GET /v1/questions` union for this org (and in the\nin-app Question Bank's \"Org Bank\" scope), but never in the shared catalogue.\nHonours `Idempotency-Key`. Requires `coursework:write` (the coarse `write`\numbrella grants it).",
         "operationId": "create_question_v1_questions_post",
         "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
           {
             "name": "Idempotency-Key",
             "in": "header",
@@ -3382,22 +2736,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -3440,22 +2778,6 @@
             "schema": {
               "type": "string",
               "title": "Group Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           }
         ],
@@ -3608,22 +2930,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -3666,22 +2972,6 @@
             "schema": {
               "type": "string",
               "title": "Result Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           }
         ],
@@ -3786,22 +3076,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -3884,22 +3158,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -3979,22 +3237,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -4027,24 +3269,6 @@
         "summary": "Create Classroom",
         "description": "Create a classroom scoped to this org. The org owner is set as the tutor (owner-as-merchant model).\nReturns 422 with a `reason` field on validation failure.",
         "operationId": "create_classroom_v1_classrooms_post",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -4096,22 +3320,6 @@
               "type": "string",
               "title": "Classroom Id"
             }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -4146,33 +3354,15 @@
         "summary": "Create Group",
         "description": "Create a group linked to an existing org classroom. The org owner is the primary tutor.\nGroups must be linked to a classroom \u2014 the membership endpoints require it.",
         "operationId": "create_group_v1_groups_post",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          }
-        ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/GroupCreate"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "201": {
@@ -4214,22 +3404,6 @@
             "schema": {
               "type": "string",
               "title": "Classroom Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           }
         ],
@@ -4284,22 +3458,6 @@
               "type": "string",
               "title": "Classroom Id"
             }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "requestBody": {
@@ -4353,22 +3511,6 @@
               "type": "string",
               "title": "Group Id"
             }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "requestBody": {
@@ -4421,22 +3563,6 @@
             "schema": {
               "type": "string",
               "title": "Group Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           }
         ],
@@ -4581,22 +3707,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -4748,22 +3858,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -4891,22 +3985,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -4940,22 +4018,6 @@
         "description": "Record a payroll adjustment (manual credit/debit) for one of the org's tutors.\n\nA negative `amount_cents` is a deduction. `tutor_id` must be an accepted member\nof your org (404 otherwise); `period_end` must be on or after `period_start`.\n`organization_id`, `created_by`, and `created_at` are server-set.\n\nSend an `Idempotency-Key` header to make retries safe \u2014 a repeat with the same\nbody replays the original response; a repeat with a different body is a 409.",
         "operationId": "create_adjustment_v1_adjustments_post",
         "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
           {
             "name": "Idempotency-Key",
             "in": "header",
@@ -5016,22 +4078,6 @@
         "description": "Mint a join link or code for a chosen scope, org-scoped to the API key's org.\n\nScopes: `organization` (recruit a tutor/admin by email, or get a reusable org\njoin link), `tutor_student` (1-on-1), `classroom`, `group`, `parent`. Supply\n`email` to invite a specific person (creates an invite row; EquateIt emails them\nwhere the platform already does); omit `email` for a reusable shareable\nlink/code. Cross-org targets return 404. Honours `Idempotency-Key`.",
         "operationId": "create_invite_v1_invites_post",
         "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
           {
             "name": "Idempotency-Key",
             "in": "header",
@@ -5100,22 +4146,6 @@
               "type": "string",
               "title": "Student Id"
             }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -5159,22 +4189,6 @@
               "type": "string",
               "title": "Parent Id"
             }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -5209,24 +4223,6 @@
         "summary": "Org Join Link",
         "description": "The org's reusable self-signup join links + codes (student + tutor). Share these via\nFacebook/Instagram/WhatsApp \u2014 anyone who opens one is added to your org when they sign up, no\nemail needed from you. READ-ONLY: returns the existing codes (a field is null if that code\nhasn't been minted yet \u2014 call POST /v1/invites {scope:\"organization\"} to mint one). This GET\nnever writes, so it's safe under the read scope.",
         "operationId": "org_join_link_v1_org_join_link_get",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -5304,22 +4300,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -5408,22 +4388,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -5503,22 +4467,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -5554,22 +4502,6 @@
         "description": "Send an in-app message into a conversation.\n\n`sender_id` must be an accepted member of your org **and** an active participant\nof the target conversation (404 otherwise) \u2014 the API can't impersonate a family\nmember or post into a thread it isn't part of. The message is sent as plain text,\nvisible to everyone in the thread, and the normal bell/email notifications fire.\nHonours `Idempotency-Key`.",
         "operationId": "create_message_v1_messages_post",
         "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
           {
             "name": "Idempotency-Key",
             "in": "header",
@@ -5629,24 +4561,6 @@
         "summary": "Reports Summary",
         "description": "An owner's business-health snapshot in one call: active tutors/students,\nsessions today, money settled this week vs outstanding, and the number of\napprovals waiting. Day/week boundaries are UTC; the week starts Monday.\n\nNo new rollup table \u2014 every figure is summed server-side in one call\n(`get_org_summary_metrics`).",
         "operationId": "reports_summary_v1_reports_summary_get",
-        "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -5742,22 +4656,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -5815,22 +4713,6 @@
               "title": "Limit"
             },
             "description": "Max tutors to return (default 10, max 50)"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -5964,22 +4846,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -6050,22 +4916,6 @@
               "title": "Postcode"
             },
             "description": "Meeting-point postcode; covering_area counts tutors within reach"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -6146,22 +4996,6 @@
               "title": "Limit"
             },
             "description": "Max gap rows to return (default 50, max 200)"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -6234,22 +5068,6 @@
               "title": "Minutes"
             },
             "description": "Drive-time contour in minutes (default from config)"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -6383,22 +5201,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -6441,22 +5243,6 @@
             "schema": {
               "type": "string",
               "title": "Participant Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           }
         ],
@@ -6557,22 +5343,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -6615,22 +5385,6 @@
             "schema": {
               "type": "string",
               "title": "Availability Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           }
         ],
@@ -6747,22 +5501,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -6805,22 +5543,6 @@
             "schema": {
               "type": "string",
               "title": "Location Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           }
         ],
@@ -6937,22 +5659,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -6995,22 +5701,6 @@
             "schema": {
               "type": "string",
               "title": "Payout Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           }
         ],
@@ -7157,22 +5847,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -7234,22 +5908,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -7311,22 +5969,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -7460,22 +6102,6 @@
               "title": "Offset"
             },
             "description": "Pagination offset"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -7509,22 +6135,6 @@
         "description": "Capture an inbound lead into your org's CRM (e.g. a website quote funnel). The\nfree-form details (name/phone/subject) are stored in the lead's `payload`; `email`,\n`source_url`, `notes` and a `source_form_name` snapshot are columns; `status` starts\nat 'new'. Honours `Idempotency-Key`. Requires `leads:write` (the coarse `write`\numbrella grants it).",
         "operationId": "create_lead_v1_leads_post",
         "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
           {
             "name": "Idempotency-Key",
             "in": "header",
@@ -7593,22 +6203,6 @@
               "type": "string",
               "title": "Lead Id"
             }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -7644,22 +6238,6 @@
         "description": "Create a blog post on the calling key's OWN organisation blog \u2014 the post is\nscoped to the key's org, so callers normally send only `title` (+ optional fields).\nDefaults `status='draft'`. Slug is derived from the title when omitted and must be\nunique per org. Honours `Idempotency-Key`. Requires the `blog:write` scope (NOT\ngranted by the `write` umbrella).\n\n`target`/`brand` are reserved for EquateIt marketing sites: `target='platform'`\nwrites a public marketing post (organization_id NULL), requires the key's\nplatform-blog capability, and `brand` (required for platform) selects the surface.",
         "operationId": "create_blog_post_v1_blog_posts_post",
         "parameters": [
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
-          },
           {
             "name": "Idempotency-Key",
             "in": "header",
@@ -7794,22 +6372,6 @@
               "default": 0,
               "title": "Offset"
             }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -7856,22 +6418,6 @@
             "schema": {
               "type": "string",
               "title": "Post Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           },
           {
@@ -7940,22 +6486,6 @@
               "type": "string",
               "title": "Post Id"
             }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "responses": {
@@ -7989,22 +6519,6 @@
             "schema": {
               "type": "string",
               "title": "Post Id"
-            }
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
             }
           }
         ],
@@ -8064,22 +6578,6 @@
               "title": "Brand"
             },
             "description": "equateit | classquill (platform only)"
-          },
-          {
-            "name": "authorization",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Authorization"
-            }
           }
         ],
         "requestBody": {
@@ -15734,6 +14232,13 @@
             "type": "array",
             "title": "Tutor Subjects",
             "default": []
+          },
+          "specialisations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Specialisations"
           },
           "distance_km": {
             "anyOf": [
