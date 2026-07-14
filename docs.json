@@ -92,7 +92,8 @@
               "rate-limits",
               "errors",
               "webhooks",
-              "connect-ai-tools"
+              "connect-ai-tools",
+              "connectors"
             ]
           },
           {

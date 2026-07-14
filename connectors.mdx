@@ -1,0 +1,124 @@
+---
+title: "AI Connectors (Hosted MCP)"
+description: "Connect Claude, Codex, Composio and other AI tools to your ClassQuill data through the hosted MCP server — no install required."
+---
+
+## The hosted MCP server
+
+ClassQuill runs a hosted [MCP](/connect-ai-tools) server at:
+
+```
+https://mcp.classquill.com/mcp
+```
+
+It is the same read-only, org-scoped server as the [`equateit-mcp`](/connect-ai-tools) npm
+package, but hosted for you as a remote **Streamable HTTP** endpoint — so any
+AI tool can connect over the network without installing anything. It is a thin
+proxy to the [ClassQuill public API](/introduction): all access control,
+org-scoping and [rate limits](/rate-limits) are enforced by the API itself.
+
+There are **two ways to authenticate**, depending on the client:
+
+| Method | Best for | What you provide |
+|--------|----------|------------------|
+| **OAuth** | claude.ai custom connectors (web) | Nothing — you log in through Claude |
+| **API key** (`Authorization: Bearer ei_live_...`) | Codex, Composio, Claude Code, and most other clients | An [API key](/authentication) as a Bearer token |
+
+<Info>
+  Both paths reach the same read-only tools. OAuth exists because claude.ai's
+  custom connectors require it; everywhere else, a plain API key is simpler.
+  Create a key in **Settings → Developers** (org admins only) — see
+  [Authentication](/authentication).
+</Info>
+
+## Claude (claude.ai custom connector — OAuth)
+
+claude.ai connects through OAuth, so there is no key to paste — you authorise
+ClassQuill the same way you would any other app.
+
+<Steps>
+  <Step title="Open connector settings">
+    In claude.ai, go to **Settings → Connectors → Add custom connector**.
+  </Step>
+  <Step title="Enter the MCP URL">
+    Set the URL to `https://mcp.classquill.com/mcp` and add the connector.
+  </Step>
+  <Step title="Complete the login">
+    Claude discovers the OAuth server automatically and opens a ClassQuill login.
+    Sign in and approve access. Claude registers itself, runs PKCE, and stores
+    the token — the connector's tools then appear in your tool list.
+  </Step>
+</Steps>
+
+Under the hood Claude follows the standard MCP OAuth discovery chain: an
+unauthenticated request returns `401` with a `WWW-Authenticate` header pointing
+at the server's protected-resource metadata
+(`/.well-known/oauth-protected-resource/mcp`), which names the authorisation
+server (`api.classquill.com`). Claude then does Dynamic Client Registration and
+an authorization-code + PKCE flow. This is all automatic — you only click
+**Log in**.
+
+<Note>
+  Custom connectors are available on claude.ai paid plans. Claude Code connects
+  differently — see [Claude Code](#claude-code) below.
+</Note>
+
+## Codex
+
+Add the hosted server to your Codex MCP configuration with your API key as a
+Bearer token. Replace `ei_live_xxxxxxxxx` with your own key.
+
+```toml
+[mcp_servers.classquill]
+url = "https://mcp.classquill.com/mcp"
+
+[mcp_servers.classquill.headers]
+Authorization = "Bearer ei_live_xxxxxxxxx"
+```
+
+## Composio
+
+In Composio, add a **custom MCP server** pointing at the hosted URL and set the
+authorization header to your API key.
+
+```json
+{
+  "name": "classquill",
+  "url": "https://mcp.classquill.com/mcp",
+  "headers": {
+    "Authorization": "Bearer ei_live_xxxxxxxxx"
+  }
+}
+```
+
+## Claude Code
+
+Claude Code connects to the hosted endpoint over HTTP with your API key in the
+`Authorization` header — no OAuth needed.
+
+```bash
+claude mcp add classquill --transport http https://mcp.classquill.com/mcp --header "Authorization: Bearer ei_live_xxxxxxxxx"
+```
+
+## Any other MCP client
+
+Any client that speaks Streamable HTTP MCP can connect by sending your key as a
+Bearer token on each request:
+
+```
+POST https://mcp.classquill.com/mcp
+Authorization: Bearer ei_live_xxxxxxxxx
+```
+
+## Prefer to run it yourself?
+
+If you would rather run the server locally (stdio, or your own HTTP host)
+instead of using the hosted endpoint, use the [`equateit-mcp`](/connect-ai-tools) npm package
+— same tools, same read-only access.
+
+<Info>
+  Every connector here is **read-only** and scoped to the organisation that owns
+  the key or OAuth session, exactly like the [REST API](/introduction). A key
+  used here has the same access it does everywhere, and the same
+  [rate limits](/rate-limits) apply.
+</Info>
