@@ -35,6 +35,7 @@
             "pages": [
               "guides/overview",
               "guides/org-setup",
+              "guides/switch-leave-delete-org",
               "guides/invite-tutors",
               "guides/add-students",
               "guides/set-availability",
