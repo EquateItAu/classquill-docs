@@ -47,6 +47,52 @@ If you left the email blank, no email is sent — the account is created against
 
 Open the student (or parent) from **Users → Learners** and use **Add email & send invite** on their profile. Enter their email and, if you want, tick **Send invite now** — this saves the email and sends the set-password link. The "No email set" badge clears once a real email is set.
 
+## Import your whole roster from a spreadsheet
+
+Moving from Excel or another system? One upload can bring across your **students, parents, tutors,
+who-teaches-whom, and everyone's weekly timetable** — and invite everyone in the same pass.
+
+### 1. Open the import
+
+Go to **Users → Learners → Add User → Import roster**, or follow the guided **Migrate your business**
+flow from your dashboard checklist (it walks import → subjects → availability → terms → invites and
+shows live progress).
+
+### 2. Prepare the file
+
+Upload a **CSV or Excel (.xlsx)** file — the **Template** button gives you a starter. One row per
+person; add extra rows with the same email for students with more than one weekly lesson. Useful columns:
+
+| Column | Notes |
+|---|---|
+| `role` | `student`, `parent`, or `tutor` (blank = student) |
+| `full_name`, `email`, `phone` | Email is optional for students — accounts without one get a "No email set" badge |
+| `subject` | Plain names are fine — "Year 9 Maths" works; you'll confirm any uncertain matches |
+| `tutor_email` | Assigns the student to that tutor (a tutor row in the same file, or an existing member) |
+| `day`, `start time`, `duration`, `mode`, `recurrence` | The weekly lesson: e.g. `Tuesday`, `4:00 PM`, `60`, `online`, `weekly` or `fortnightly` |
+| `child_email` | Parents: the email of their child in the same file |
+
+### 3. Map, match subjects, review
+
+The wizard auto-detects your columns (adjust anything it guessed wrong), then asks you to confirm any
+subject names it isn't sure about — nothing is ever silently dropped. The preview shows every person,
+their lessons, and any row problems before anything is created.
+
+### 4. Choose the schedule window and invites
+
+If your file has lesson columns, pick what the recurring schedules run against — a **term** you've
+created (Settings → Terms) or a **number of weeks** from a start date. The **"Send invite emails now"**
+toggle (on by default) controls whether everyone gets their set-password email immediately.
+
+### 5. Import and check the results
+
+The wizard creates accounts first, then books every lesson as a confirmed recurring session on your org
+calendar. The result table shows three things per person — **Account** (created / linked / failed),
+**Schedule** (sessions booked, or any time conflicts skipped), and **Invite** (sent / already a member /
+no email) — with a one-click retry for any schedules that failed. Tutors get a single summary email of
+the sessions added to their calendar, not one email per lesson. Re-running the same file is safe: it
+won't double-book sessions or send duplicate invites.
+
 ## Joining via a shareable link
 
 You don't need anyone's email to bring them in. Two kinds of self-serve link exist:
