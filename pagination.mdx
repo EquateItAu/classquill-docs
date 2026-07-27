@@ -12,15 +12,29 @@ List endpoints return a consistent envelope:
 }
 ```
 
+Two paging modes are available on most list endpoints:
+
+- **Offset** (`limit` + `offset`) — simple, fine for small result sets and one-off reads.
+- **Cursor** (`cursor`) — recommended for large exports and incremental syncs: constant
+  cost at any depth, and rows inserted while you page can never make you skip or
+  double-read a record.
+
 ## Parameters
 
 <ParamField query="limit" type="integer" default="20">
-  Records per page. Minimum `1`, maximum `100`.
+  Records per page. Minimum `1`, maximum `100`. Applies in both modes.
 </ParamField>
 
 <ParamField query="offset" type="integer" default="0">
   Number of records to skip. Combine with `limit` to page:
-  `?limit=50&offset=100` returns records 101–150.
+  `?limit=50&offset=100` returns records 101–150. Ignored when `cursor` is set.
+</ParamField>
+
+<ParamField query="cursor" type="string">
+  Opaque token from a previous response's `meta.next_cursor`. When set, results page by a
+  stable `(created_at, id)` keyset — newest first — and `offset` is ignored. Available on
+  every list endpoint except `/tutors`, `/students`, `/parents`, `/conversations`, and the
+  `/coverage/*` routes (offset-only).
 </ParamField>
 
 ## The `meta` object
@@ -28,24 +42,80 @@ List endpoints return a consistent envelope:
 | Field | Meaning |
 | --- | --- |
 | `limit` | The page size that was applied. |
-| `offset` | The offset that was applied. |
+| `offset` | Offset mode only: the offset that was applied. |
 | `count` | Number of records in **this** page's `data` array. |
-| `total` | Full result-set size, **when known** (present on `/tutors`, `/students`, `/parents`). |
+| `total` | Offset mode, full result-set size **when known** (present on `/tutors`, `/students`, `/parents`). |
+| `next_cursor` | Cursor mode only: pass as `?cursor=` for the next page; `null` means you have everything. |
+
+Cursor-mode responses also carry a standard `Link: <...>; rel="next"` header, so generic
+HTTP paginators can follow pages without parsing the body.
+
+## Polling for new records
+
+Tools like Zapier and Make poll a list endpoint on a timer, read **only the first page**,
+and treat any record ID they haven't seen before as new. They do **not** page backwards
+through history. That only works if new records sort to the top.
+
+`/students` and `/parents` are ordered **newest enrolment first** (`enrolled_at`
+descending) for exactly this reason — poll page 1 on your interval and you will see every
+new record.
+
+| Endpoint | Ordered by | Safe to poll for new records |
+| --- | --- | --- |
+| `/students` | `enrolled_at` desc | Yes |
+| `/parents` | `enrolled_at` desc | Yes |
+| `/tutors` | join date | Yes |
+| `/payments`, `/invoices`, `/leads`, `/classrooms` (and most others) | `created_at` desc | Yes |
+| `/sessions` | **`starts_at` desc** | **No — see below** |
+
+<Warning>
+  `/sessions` is ordered by when the session is **scheduled to happen**, not by when it
+  was booked. A session booked today for next month sorts above one booked today for
+  tomorrow, and a session backfilled for a past date sorts near the bottom. Don't poll it
+  to detect new bookings — use a [webhook](/webhooks) instead.
+</Warning>
+
+### `enrolled_at` is the cursor, not `created_at`
+
+On `/students` and `/parents` these two fields mean different things:
+
+- **`enrolled_at`** — when they joined **your organisation**. This is the sort key.
+- **`created_at`** — when the underlying **account** was created: possibly in a different
+  organisation, possibly years earlier.
+
+A student who has had an account since 2024 but joined your org this morning has an
+`enrolled_at` of this morning and sits at the top of page 1. Sort and filter on
+`enrolled_at`.
+
+If you'd rather be pushed than poll, [webhooks](/webhooks) deliver the same records the
+moment they change.
 
 ## Paging through everything
 
-Increase `offset` by `limit` until a page returns fewer than `limit` records (or, where
-`total` is present, until `offset + count >= total`):
+**Preferred (cursor):** start with `cursor=start`, then follow `meta.next_cursor`
+until it comes back `null`:
 
 ```bash
 # page 1
-curl "https://api.classquill.com/v1/payments?limit=100&offset=0" \
+curl "https://api.classquill.com/v1/payments?limit=100&cursor=start" \
   -H "Authorization: Token token=ei_live_..."
+# → meta: { "limit": 100, "count": 100, "next_cursor": "eyJrIjoi..." }
 
-# page 2
-curl "https://api.classquill.com/v1/payments?limit=100&offset=100" \
+# page 2 (and onwards, until next_cursor is null)
+curl "https://api.classquill.com/v1/payments?limit=100&cursor=eyJrIjoi..." \
   -H "Authorization: Token token=ei_live_..."
 ```
+
+On endpoints whose default order is already newest-created-first (most of them), a full
+plain offset page also includes a `next_cursor`, so you can switch to cursor paging from
+page 2 without starting over. Cursor pages are always ordered newest-created first
+regardless of the endpoint's offset-mode order (so `/sessions` by cursor walks booking
+order, not schedule order — exactly what a sync wants).
+
+**Legacy (offset):** increase `offset` by `limit` until a page returns fewer than
+`limit` records (or, where `total` is present, until `offset + count >= total`).
+Offset paging keeps working forever, but deep offsets get slower and a record created
+mid-walk shifts the window, so a sync can miss or double-read a row.
 
 <Note>
   Single-record and rollup endpoints (e.g. `/sessions/{id}`, `/reports/summary`,

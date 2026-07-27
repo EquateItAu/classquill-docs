@@ -3,17 +3,20 @@ title: "Errors"
 description: "HTTP status codes the API returns and what they mean."
 ---
 
-The API uses standard HTTP status codes. Bodies follow FastAPI's shape — a `detail`
-field describing the problem.
+The API uses standard HTTP status codes. Every error response shares a single
+envelope — an `error` object describing the problem.
 
 | Status | Meaning | Common cause |
 | --- | --- | --- |
 | `200` | OK | Request succeeded. |
+| `400` | Bad request | The request was malformed. |
 | `401` | Unauthorized | Missing, malformed, unknown, revoked, or expired API key. |
 | `403` | Forbidden | The key lacks the scope required for this endpoint. |
 | `404` | Not found | The record doesn't exist **or belongs to another organisation**. |
-| `422` | Unprocessable entity | A query parameter failed validation (e.g. `limit` over 100). |
+| `409` | Conflict | The request conflicts with the current state (e.g. a duplicate). |
+| `422` | Unprocessable entity | A query parameter or field failed validation (e.g. `limit` over 100). |
 | `429` | Too many requests | You exceeded the [rate limit](/rate-limits). |
+| `500` | Internal error | Something went wrong on our side. |
 
 ## A note on `404`
 
@@ -21,11 +24,71 @@ Requesting a record that belongs to a **different organisation** returns `404`, 
 This is deliberate: it prevents callers from probing which IDs exist outside their own org.
 From your key's perspective, anything outside your organisation simply does not exist.
 
-## Example
+## The error envelope
+
+Every error — at any status — returns the same shape:
 
 ```json
 {
-  "detail": { "code": 404, "message": "Not found", "data": {} }
+  "error": {
+    "code": "not_found",
+    "message": "Session not found",
+    "status": 404,
+    "details": {}
+  }
+}
+```
+
+`code` is a stable machine-readable string, `message` is a human-readable
+description, `status` mirrors the HTTP status, and `details` carries any extra
+context (empty by default).
+
+## Error codes
+
+| `code` | Status |
+| --- | --- |
+| `bad_request` | `400` |
+| `unauthorized` | `401` |
+| `forbidden` | `403` |
+| `not_found` | `404` |
+| `conflict` | `409` |
+| `validation_error` | `422` |
+| `rate_limited` | `429` |
+| `internal_error` | `500` |
+
+## Validation errors
+
+A `422 validation_error` carries the field-level failures in `details.errors`:
+
+```json
+{
+  "error": {
+    "code": "validation_error",
+    "message": "Validation failed",
+    "status": 422,
+    "details": {
+      "errors": [
+        { "loc": ["query", "limit"], "msg": "must be 100 or less", "type": "value_error" }
+      ]
+    }
+  }
+}
+```
+
+## Rate limit errors
+
+A `429 rate_limited` sets `details.retry_after_seconds`, and the response still
+carries a `Retry-After` header with the same value. See [rate limits](/rate-limits)
+for the headers on every response.
+
+```json
+{
+  "error": {
+    "code": "rate_limited",
+    "message": "Rate limit exceeded",
+    "status": 429,
+    "details": { "retry_after_seconds": 30 }
+  }
 }
 ```
 

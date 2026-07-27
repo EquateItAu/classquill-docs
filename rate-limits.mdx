@@ -11,12 +11,33 @@ When you exceed the limit, the API responds with:
 HTTP/1.1 429 Too Many Requests
 ```
 
+The body follows the standard [error envelope](/errors) with `code: "rate_limited"`,
+and `details.retry_after_seconds` tells you how long to wait. A `Retry-After` header
+carries the same value.
+
+## Rate limit headers
+
+Every `/v1` response — success or `429` — includes your current limit state, so you
+can pace requests proactively instead of waiting for a `429`:
+
+| Header | Meaning |
+| --- | --- |
+| `RateLimit-Limit` | Requests allowed per window (`120`). |
+| `RateLimit-Remaining` | Requests left in the current window. |
+| `RateLimit-Reset` | Seconds until the window resets. |
+
+The same values are also sent under `X-RateLimit-Limit`, `X-RateLimit-Remaining`,
+and `X-RateLimit-Reset` aliases — read whichever your HTTP client exposes.
+
 ## Staying within the limit
 
+- **Watch `RateLimit-Remaining`** and slow down as it approaches zero rather than
+  waiting to be throttled.
 - **Cache** data that doesn't change often (tutors, classrooms, subjects) rather than
   re-fetching on every run.
 - **Page efficiently** with `limit=100` instead of many small pages.
-- **Back off** on a `429`: wait, then retry with exponential backoff (e.g. 1s, 2s, 4s).
+- **Back off** on a `429`: honour `Retry-After` (or `details.retry_after_seconds`),
+  then retry with exponential backoff (e.g. 1s, 2s, 4s).
 
 <Tip>
   Syncing to an accounting tool? Pull once on a schedule (hourly or nightly) rather than
