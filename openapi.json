@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "EquateIt Public API",
-    "description": "REST API for EquateIt tutoring organisations. Pipe your sessions, invoices, payments, tutor earnings, students, and more into your own tools. Most endpoints are reads; a focused set of writes (each gated by a *:write scope) create or update data, including creating student/tutor/parent accounts.\n\nAuthenticate every request with an org API key:\n\n    Authorization: Token token=ei_live_...\n\nMint keys in the EquateIt app under Settings \u2192 Developers.",
+    "title": "ClassQuill Public API",
+    "description": "REST API for ClassQuill tutoring organisations. Pipe your sessions, invoices, payments, tutor earnings, students, and more into your own tools. Most endpoints are reads; a focused set of writes (each gated by a *:write scope) create or update data, including creating student/tutor/parent accounts.\n\nAuthenticate every request with an org API key:\n\n    Authorization: Token token=ei_live_...\n\nMint keys in the ClassQuill app under Settings \u2192 Developers.",
     "version": "1.0.0"
   },
   "paths": {
@@ -12766,7 +12766,7 @@
           "scope"
         ],
         "title": "Invite",
-        "description": "A minted invite. `token` carries the invite token (organization/tutor_student)\nor the code (parent / org-join-code scopes). `join_url` is null for `parent` (the\ncode is entered manually). `emailed` is true only when EquateIt actually sent an\nemail (organization, or tutor_student with an email)."
+        "description": "A minted invite. `token` carries the invite token (organization/tutor_student)\nor the code (parent / org-join-code scopes). `join_url` is null for `parent` (the\ncode is entered manually).\n\n`emailed` is true when ClassQuill queued an email for this invite (organization,\nor tutor_student with an email) \u2014 it does NOT confirm delivery. The actual send\nis async: a background job drains the queue and calls Resend, which can still\nfail, bounce, or land in spam after this response returns. Callers should\nsurface `join_url` as a fallback rather than relying on the email arriving."
       },
       "InviteCreate": {
         "properties": {
@@ -12872,7 +12872,7 @@
           "scope"
         ],
         "title": "InviteCreate",
-        "description": "POST /v1/invites \u2192 mint a join link or code for a chosen scope.\n\nDelivery is decided by `email` + `scope` (there is no `send_email` flag): supply\n`email` to invite a specific person \u2014 this creates an invite row and EquateIt\nemails them where the platform already does (`organization` always, via a DB\ntrigger; `tutor_student` when an email is given). Omit `email` to get a reusable\nshareable link/code. Per-scope required/irrelevant fields are validated\nserver-side (422). `organization_id`, tokens, and timestamps are always\nserver-set; the invite RPCs are never called (they are auth.uid()-gated)."
+        "description": "POST /v1/invites \u2192 mint a join link or code for a chosen scope.\n\nDelivery is decided by `email` + `scope` (there is no `send_email` flag): supply\n`email` to invite a specific person \u2014 this creates an invite row and ClassQuill\nqueues them an email where the platform already does (`organization` always, via\na DB trigger; `tutor_student` when an email is given). Omit `email` to get a\nreusable shareable link/code. Per-scope required/irrelevant fields are validated\nserver-side (422). `organization_id`, tokens, and timestamps are always\nserver-set; the invite RPCs are never called (they are auth.uid()-gated).\n\n`emailed: true` in the response means the invite email was QUEUED, not that it\nwas delivered \u2014 queueing happens synchronously in this request, but the actual\nsend is async (a 1-minute-cadence cron drains the queue via Resend). Treat\n`join_url` as the reliable fallback: surface it to the caller/inviter rather\nthan assuming the email will arrive."
       },
       "Invoice": {
         "properties": {
@@ -14529,7 +14529,7 @@
         },
         "type": "object",
         "title": "OrgJoinLink",
-        "description": "GET /v1/org/join-link \u2014 the org's reusable self-signup join links/codes (share via\nFacebook/Instagram/WhatsApp; no email needed from you). `student_*` adds the person as a\nstudent, `tutor_*` as a tutor. Codes are minted on first read if unset."
+        "description": "GET /v1/org/join-link \u2014 the org's reusable self-signup join links/codes (share via\nFacebook/Instagram/WhatsApp; no email needed from you). `student_*` adds the person as a\nstudent, `tutor_*` as a tutor. This GET is read-only and never mints: a field is null until\nits code has been minted via `POST /v1/invites {scope:\"organization\"}` (omit `email`)."
       },
       "PageMeta": {
         "properties": {
