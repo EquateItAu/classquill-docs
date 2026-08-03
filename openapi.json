@@ -136,7 +136,7 @@
           "Sessions"
         ],
         "summary": "List Sessions",
-        "description": "List sessions for the authenticated organisation.\n\nOrdered by starts_at descending (most recent first). Filter by status,\ntutor, student, or date range. Supports limit/offset and cursor pagination.\n\nCommon status values: completed, scheduled, cancelled, pending,\ntime_change_requested, disputed.",
+        "description": "List sessions for the authenticated organisation.\n\nOrdered by `created_at` descending (most recently **booked** first) by default\nso a polling integration that reads only the first page catches every new\nbooking. Pass `?sort=starts_at` to order by when the session is **scheduled**\ninstead (an agenda view). `from`/`to` always filter on `starts_at`, whichever\nsort is used. Filter by status, tutor, student, or date range. Supports\nlimit/offset and cursor pagination.\n\nCommon status values: completed, scheduled, cancelled, pending,\ntime_change_requested, disputed.",
         "operationId": "list_sessions_v1_sessions_get",
         "parameters": [
           {
@@ -228,6 +228,18 @@
               "title": "To"
             },
             "description": "starts_at <= this ISO date, e.g. 2026-05-31"
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "description": "Order by: created_at (when booked, newest first - the default) or starts_at (when scheduled, newest first). Applies to offset-mode paging; cursor mode always pages by (created_at, id).",
+              "default": "created_at",
+              "title": "Sort"
+            },
+            "description": "Order by: created_at (when booked, newest first - the default) or starts_at (when scheduled, newest first). Applies to offset-mode paging; cursor mode always pages by (created_at, id)."
           },
           {
             "name": "cursor",
@@ -9733,6 +9745,327 @@
         }
       }
     },
+    "/v1/notes": {
+      "get": {
+        "tags": [
+          "General"
+        ],
+        "summary": "List Notes",
+        "description": "List topic notes (most recent first).\n\nReturns the published shared corpus by default. Add the `notes:personal` scope to a\nkey to also see notes owned by the key's creator, or pass `?scope=personal` for only\nthose. **`content_markdown` is null here** \u2014 list responses carry metadata only; fetch\na single note to get its body.",
+        "operationId": "list_notes_v1_notes_get",
+        "parameters": [
+          {
+            "name": "topic_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by topic (curriculum level) UUID",
+              "title": "Topic Id"
+            },
+            "description": "Filter by topic (curriculum level) UUID"
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "shared | personal",
+              "title": "Scope"
+            },
+            "description": "shared | personal"
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Opaque cursor from a previous response's meta.next_cursor, or the literal 'start' to begin cursor paging from the newest record. When set, offset is ignored and results page by a stable (created_at, id) keyset \u2014 recommended for large or incremental syncs.",
+              "title": "Cursor"
+            },
+            "description": "Opaque cursor from a previous response's meta.next_cursor, or the literal 'start' to begin cursor paging from the newest record. When set, offset is ignored and results page by a stable (created_at, id) keyset \u2014 recommended for large or incremental syncs."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Records per page (default 20, max 100)",
+              "default": 20,
+              "title": "Limit"
+            },
+            "description": "Records per page (default 20, max 100)"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Pagination offset (ignored when cursor is set)",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Pagination offset (ignored when cursor is set)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_Note_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error \u2014 `error.details.errors` lists the fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed, revoked, or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the scope this endpoint requires.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 honour Retry-After and the RateLimit-* headers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/notes/{note_id}": {
+      "get": {
+        "tags": [
+          "General"
+        ],
+        "summary": "Get Note",
+        "description": "Fetch a single note, including `content_markdown` \u2014 the full body as a markdown\ndocument.\n\n404 if it does not exist or this key may not read it (never 403, so cross-user\nexistence does not leak).",
+        "operationId": "get_note_v1_notes__note_id__get",
+        "parameters": [
+          {
+            "name": "note_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Note UUID",
+              "title": "Note Id"
+            },
+            "description": "Note UUID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Note"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error \u2014 `error.details.errors` lists the fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed, revoked, or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the scope this endpoint requires.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 honour Retry-After and the RateLimit-* headers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found \u2014 the record doesn't exist or belongs to another organisation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "General"
+        ],
+        "summary": "Update Note",
+        "description": "Update a personal note (partial \u2014 send only fields to change).\n\nOnly notes owned by the API key's creator are writable; the shared corpus is\nread-only over /v1, and anything else 404s. `content_markdown` is decoded back into\nthe note's stored sections, and a section block this server does not recognise\nround-trips untouched. When both fields are sent, `title` wins over any title in the\nmarkdown front matter.\n\nThis endpoint never creates a note \u2014 `topic_notes` has no uniqueness constraint, and\nduplicate rows break the app's `.maybeSingle()` reads.",
+        "operationId": "update_note_v1_notes__note_id__put",
+        "parameters": [
+          {
+            "name": "note_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Note Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Note"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error \u2014 `error.details.errors` lists the fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed, revoked, or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the scope this endpoint requires.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 honour Retry-After and the RateLimit-* headers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found \u2014 the record doesn't exist or belongs to another organisation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/blog-posts": {
       "post": {
         "tags": [
@@ -14311,6 +14644,123 @@
         ],
         "title": "MileageTrip"
       },
+      "Note": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "content_markdown": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Markdown"
+          },
+          "topic_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic Id"
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "shared",
+                  "personal"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scope"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "Note",
+        "description": "A topic note. `content_markdown` is the note's full body as a markdown document\n(see `api.notes_codec`) \u2014 it is populated on GET /v1/notes/{id} and is **null in\nlist responses**, which carry metadata only.\n\n`scope` is derived: 'shared' for the published global corpus, 'personal' for a\nnote owned by the API key's creator. The physical note_type vocabulary and the\nstructured_content JSONB shape are deliberately not exposed."
+      },
+      "NoteUpdate": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 300,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "content_markdown": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 200000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content Markdown"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "NoteUpdate",
+        "description": "PUT /v1/notes/{id} \u2192 topic_notes. Only personal notes are writable; shared notes\nare read-only over /v1. `content_markdown` is decoded back into the note's stored\nsections \u2014 an unrecognised section block round-trips untouched. When both fields are\nsent, `title` wins over any title in the markdown front matter."
+      },
       "OffboardResult": {
         "properties": {
           "success": {
@@ -14889,6 +15339,26 @@
           "meta"
         ],
         "title": "Page[MileageTrip]"
+      },
+      "Page_Note_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/Note"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PageMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "Page[Note]"
       },
       "Page_OrgInboxMessage_": {
         "properties": {

@@ -66,14 +66,24 @@ new record.
 | `/parents` | `enrolled_at` desc | Yes |
 | `/tutors` | join date | Yes |
 | `/payments`, `/invoices`, `/leads`, `/classrooms` (and most others) | `created_at` desc | Yes |
-| `/sessions` | **`starts_at` desc** | **No — see below** |
+| `/sessions` | `created_at` desc (default) | Yes |
 
-<Warning>
-  `/sessions` is ordered by when the session is **scheduled to happen**, not by when it
-  was booked. A session booked today for next month sorts above one booked today for
-  tomorrow, and a session backfilled for a past date sorts near the bottom. Don't poll it
-  to detect new bookings — use a [webhook](/webhooks) instead.
-</Warning>
+### `/sessions` has two sort axes
+
+`/sessions` accepts `?sort=created_at` (default) or `?sort=starts_at`:
+
+- **`created_at`** (default) — when the session was **booked**. Poll page 1 on this axis and
+  you will see every new booking, same as every other endpoint above.
+- **`starts_at`** — when the session is **scheduled to happen**. Useful for an agenda/calendar
+  view ("what's coming up"), but do NOT poll it to detect new bookings: a session booked today
+  for next month sorts above one booked today for tomorrow, and a session backfilled for a past
+  date sorts near the bottom.
+
+`from`/`to` always filter on `starts_at`, regardless of which `sort` you use — so a calendar
+consumer typically sets both `sort=starts_at` and a `from`/`to` window.
+
+If you'd rather be pushed than poll, [webhooks](/webhooks) deliver the same records the moment
+they change.
 
 ### `enrolled_at` is the cursor, not `created_at`
 
