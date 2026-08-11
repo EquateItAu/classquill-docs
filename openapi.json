@@ -1176,7 +1176,7 @@
           "Students & Parents"
         ],
         "summary": "Link Parent Student",
-        "description": "Link a parent to a student. `parent_id` must be a parent account\n(profiles.account_type='parent') and `student_id` an org-affiliated student (404\notherwise) \u2014 the link is what associates the parent with your org. Idempotent \u2014 an\nexisting link is returned as a 200 no-op.",
+        "description": "Link a parent ALREADY KNOWN to your org to another of your students (a sibling).\nBoth sides are org-scoped: `student_id` must be an org-affiliated student, and\n`parent_id` must be a parent account (profiles.account_type='parent') already\nlinked to at least one of your students. 404 otherwise \u2014 a parent you have no\nrelationship with is indistinguishable from one that does not exist. Idempotent \u2014\nan existing link is returned as a 200 no-op.\n\nTo associate a parent with your org for the FIRST time use `POST /v1/parents`,\nwhich identifies the parent by email (resolving an existing platform account, or\nminting one) against an org-scoped `student_id`.",
         "operationId": "link_parent_student_v1_parents__parent_id__link_student_post",
         "parameters": [
           {
