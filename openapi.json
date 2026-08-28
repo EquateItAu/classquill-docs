@@ -9576,7 +9576,7 @@
           "Bookings"
         ],
         "summary": "Create Lead",
-        "description": "Capture an inbound lead into your org's CRM (e.g. a website quote funnel). The\nfree-form details (name/phone/subject) are stored in the lead's `payload`; `email`,\n`source_url`, `notes` and a `source_form_name` snapshot are columns; `status` starts\nat 'new'. Honours `Idempotency-Key`. Requires `leads:write` (the coarse `write`\numbrella grants it).",
+        "description": "Capture an inbound lead into your org's CRM (e.g. a website quote funnel). The\nfree-form details (name/phone/subject) are stored in the lead's `payload`; `email`,\n`source_url`, `notes` and a `source_form_name` snapshot are columns; `status` starts\nat 'new'. `audience` ('student'/'tutor'/'parent') defaults to 'student' when omitted.\nHonours `Idempotency-Key`. Requires `leads:write` (the coarse `write` umbrella grants\nit).",
         "operationId": "create_lead_v1_leads_post",
         "parameters": [
           {
@@ -13453,6 +13453,22 @@
             ],
             "title": "Subject"
           },
+          "audience": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "student",
+                  "tutor",
+                  "parent"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audience"
+          },
           "status": {
             "anyOf": [
               {
@@ -13573,6 +13589,23 @@
             ],
             "title": "Subject",
             "description": "Subject of interest, e.g. 'Methods'."
+          },
+          "audience": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "student",
+                  "tutor",
+                  "parent"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audience",
+            "description": "Who this lead is: 'student' (enrolment, the default), 'tutor' (recruitment), or 'parent' (enrolment, on behalf of a student). Omit to use the org_leads column default ('student')."
           },
           "source_form_name": {
             "anyOf": [
