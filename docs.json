@@ -65,6 +65,12 @@
             ]
           },
           {
+            "group": "Study Resources",
+            "pages": [
+              "guides/study/notes-and-reference-sheets"
+            ]
+          },
+          {
             "group": "AI Features",
             "pages": [
               "guides/ai/auto-grading",
