@@ -83,6 +83,12 @@
             "pages": [
               "guides/blog/publishing-your-blog"
             ]
+          },
+          {
+            "group": "Website & Growth",
+            "pages": [
+              "guides/website/adding-the-badge"
+            ]
           }
         ]
       },
