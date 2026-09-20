@@ -1,0 +1,60 @@
+---
+title: "Settings overview"
+description: "Where everything lives under Settings, and who can see each section."
+---
+
+Settings is one page, `/settings`, but it shows a different set of rows depending on your role.
+This page is a map — use it to find the right row before hunting through the sidebar.
+
+## Organisation (org owners and admins only)
+
+Tutors, students and parents never see this group.
+
+| Row | What's there |
+|---|---|
+| **Organisation** | Name, logo, timezone, language, currency, brand kit, legal details, danger zone |
+| **Billing & finance** | GST treatment, invoice settings, how families pay, bank account, tutor reimbursements (mileage + expenses), cancellations & no-shows, card auto-charge |
+| **Integrations** | Stripe Connect, accounting (Xero/MYOB), bank reconciliation, API keys, connect via MCP, outbound integrations, Zapier, connected apps and webhooks — everything that belongs to the organisation rather than to one person |
+| **Subjects** | Subjects you teach, open-book policy for exams, content defaults (question bank, resource downloads, course adoption) |
+| **Scheduling & teaching** | Locations, term dates, institute holidays, session scheduling, video calls (recording + auto-log), booking approvals, travel-time warning |
+| **Booking & public page** | Family feedback and tutor check-in settings, your public booking page |
+| **Communications** | Email sending identity, email templates, extra notes in emails, inquiry routing |
+| **Team & compliance** | Permissions (admins and tutors), messaging policy |
+| **Pricing** | Your rate matrix — what students pay and tutors earn |
+| **Subscription** | Your ClassQuill plan |
+
+<Info>
+  **Integrations** used to be split across Billing, Connections and a separate Developers page.
+  It's now one row: if a credential or config belongs to the organisation (survives a staff
+  member leaving), it's here. If it belongs to a person, it's on their own **Connections** page
+  below.
+</Info>
+
+## Account (everyone)
+
+Every role — owner, admin, tutor, student, parent — sees these.
+
+| Row | What's there |
+|---|---|
+| **Preferences** | Appearance, input method, language, timezone, and (students) calculator, voice and AI response mode |
+| **Account** | Your identity (name, email, phone, avatar), password, memberships, referral code, signature, and account deletion |
+| **Tutor profile** *(tutors only)* | **Listing** — photo, video, bio, publish/unpublish; **Teaching** — mode, type, experience, specialisations, capacity and booking approval; org tutors also get a **Getting paid** group (invoice settings, bank details, where you tutor) |
+| **Connections** | Your personal Google Calendar, Drive and Classroom links (students also see membership cards — join code, linked org, classrooms, groups, parent link) |
+| **Notifications** | Per-category notification preferences (in-app and email), plus push notifications |
+| **Safety** | Blocked users, your reports, and Help & legal |
+
+<Note>
+  **Preferences** was called **General** before 2026-09-20 — it's the same page, renamed and
+  trimmed down to one card. Push notifications moved from there to **Notifications**.
+</Note>
+
+## What's next
+
+<CardGroup cols={2}>
+  <Card title="Set up your organisation" icon="building" href="/guides/org-setup">
+    Name, logo, subjects and timezone.
+  </Card>
+  <Card title="Set tutor availability" icon="calendar" href="/guides/set-availability">
+    Weekly hours and org-wide scheduling rules.
+  </Card>
+</CardGroup>
