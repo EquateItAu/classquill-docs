@@ -25,7 +25,9 @@ ClassQuill plays SCORM 1.2 and SCORM 2004 modules: the `.zip` packages you expor
 
 ## Set a minimum time
 
-Each package has a **Minimum time (minutes)**. If a learner completes the module faster than this, the completion still counts, but it's flagged for you to review. ClassQuill measures time itself. It doesn't rely on the time the module reports. Set it to `0` to turn the check off.
+Each package has a **Minimum time (minutes)**. If a learner completes the module faster than this, the completion still counts, but it's flagged for you to review. ClassQuill measures time itself. It doesn't rely on the time the module reports. Set it to `0` to turn this check off.
+
+Separately, any completion in **under one minute** is always flagged, whatever the minimum. No real module finishes that fast.
 
 ## Add a module to a course or to training
 
@@ -59,7 +61,7 @@ On the package's card, click **Upload new version**. The new version doesn't rep
 
 ## Review flagged completions
 
-The bottom of **SCORM packages** lists **Completions to review**. These are completions that came in faster than the package's minimum time. For each one you see:
+The bottom of **SCORM packages** lists **Completions to review**. These are completions that came in faster than the package's minimum time, or in under a minute. For each one you see:
 
 - the learner
 - the module
