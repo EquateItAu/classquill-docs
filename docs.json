@@ -72,6 +72,12 @@
             ]
           },
           {
+            "group": "Courses & Content",
+            "pages": [
+              "guides/courses/building-a-course"
+            ]
+          },
+          {
             "group": "AI Features",
             "pages": [
               "guides/ai/auto-grading",
