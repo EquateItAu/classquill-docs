@@ -1,0 +1,81 @@
+---
+title: "SCORM modules: upload, place and track"
+description: "Upload SCORM 1.2 or 2004 packages, add them to a course or to tutor training, and see which completions were faster than your minimum time."
+---
+
+ClassQuill plays SCORM 1.2 and SCORM 2004 modules: the `.zip` packages you export from tools like Articulate Storyline or Rise, iSpring, Captivate or Elucidat. A module becomes a lesson in any course or in your tutor training. It completes when the module reports that the learner has finished it.
+
+<Note>
+  Uploading and managing packages is for organisation **owners and admins**. Teachers and tutors can add packages that are already uploaded to a course.
+</Note>
+
+## Upload a package
+
+<Steps>
+  <Step title="Open SCORM packages">
+    Go to **Onboarding → Training** and click **SCORM packages**, or open `/org/scorm`.
+  </Step>
+  <Step title="Upload the .zip">
+    Click **Upload package** and choose the `.zip` your authoring tool exported. It must have `imsmanifest.xml` at its root and be 250 MB or smaller. Optionally give it a title; otherwise ClassQuill uses the one in the package.
+  </Step>
+  <Step title="Wait for Ready">
+    The package shows **Processing** while ClassQuill unpacks it, then **Ready**. If it shows **Failed**, upload it again. A package that is refused straight away (for example, no manifest, or files outside the package) tells you why.
+  </Step>
+</Steps>
+
+## Set a minimum time
+
+Each package has a **Minimum time (minutes)**. If a learner completes the module faster than this, the completion still counts, but it's flagged for you to review. ClassQuill measures time itself. It doesn't rely on the time the module reports. Set it to `0` to turn this check off.
+
+Separately, any completion in **under one minute** is always flagged, whatever the minimum. No real module finishes that fast.
+
+## Add a module to a course or to training
+
+<Steps>
+  <Step title="Open the page">
+    Open the course page or training section where the module belongs.
+  </Step>
+  <Step title="Add it">
+    Click **+ Add → SCORM module** and pick the package. ClassQuill lists the newest version of each package.
+  </Step>
+</Steps>
+
+You can add SCORM modules to your organisation's courses, to tutor training and to class courses. They aren't available on group or 1:1 courses.
+
+A module in **tutor training** counts towards the training requirement, the same as any other training item.
+
+## What learners see
+
+Learners click **Start module**. The module opens in a full-screen player. It runs in a sandboxed frame on a separate domain, so it can't see the learner's ClassQuill account; it only reports progress back.
+
+- Progress saves as they go. They can close the module and **Resume** later from where they left off.
+- The lesson is marked complete when the module reports it is finished (or passed). There's no "Mark complete" tick on a SCORM lesson.
+- If the same module is opened in another tab, the older tab stops saving and tells the learner to continue in the newer one.
+
+## Upload a new version
+
+On the package's card, click **Upload new version**. The new version doesn't replace the old one straight away:
+
+- Lessons keep playing the version they were added with until you click **Move lessons to v2** (or whichever number is newest).
+- A learner who has already started a module keeps their version. Their saved progress belongs to it. Only learners who haven't started yet get the new version.
+
+## Review flagged completions
+
+The bottom of **SCORM packages** lists **Completions to review**. These are completions that came in faster than the package's minimum time, or in under a minute. For each one you see:
+
+- the learner
+- the module
+- the time ClassQuill measured
+- the time the module itself reported
+
+Switch to **All SCORM completions** to see every completion.
+
+The review is for information only. Flagged completions still count. If you need stronger evidence for a requirement, add a quiz after the module.
+
+## Copying courses
+
+When you copy a section or duplicate a class, SCORM lessons come with it as long as the copy stays inside your organisation. If you copy into another organisation's class, its SCORM lessons are left out, because the packages belong to your organisation.
+
+<Tip>
+  Before your first upload, your ClassQuill account needs SCORM playback switched on. If learners see "SCORM playback isn't set up for this site yet", contact support.
+</Tip>
