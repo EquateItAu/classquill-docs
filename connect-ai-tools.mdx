@@ -1,6 +1,6 @@
 ---
 title: "MCP Server"
-description: "Give AI tools read-only access to your EquateIt data using natural language."
+description: "Give AI tools read-only access to your ClassQuill data using natural language."
 ---
 
 ## What is an MCP Server?
@@ -8,16 +8,16 @@ description: "Give AI tools read-only access to your EquateIt data using natural
 MCP is an open protocol that standardizes how applications provide context to
 LLMs. Among other benefits, it gives LLMs tools to act on your behalf.
 
-The EquateIt MCP server lets MCP-aware tools — Claude Code, Claude Desktop,
+The ClassQuill MCP server lets MCP-aware tools — Claude Code, Claude Desktop,
 Cursor, Windsurf and others — read your organisation's tutoring data through the
-[EquateIt public API](/introduction). It is **read-only** and scoped to your
+[ClassQuill public API](/introduction). It is **read-only** and scoped to your
 org, exactly like the REST API.
 
 <Tip>
   Prefer not to install or run anything? Use the **hosted** server at
   `https://mcp.classquill.com/mcp` instead — see
   [AI Connectors](/connectors) to connect Claude (via OAuth), Codex, Composio
-  and others. This page covers running the `equateit-mcp` package yourself.
+  and others. This page covers running the `classquill-mcp` package yourself.
 </Tip>
 
 ## What it can do
@@ -37,13 +37,13 @@ As an example, you could ask *"How much did each tutor earn last week?"* or
 ## Prerequisites
 
 - [Node.js](https://nodejs.org) 18 or later
-- An EquateIt API key — create one in **Settings → Developers** (org admins
+- A ClassQuill API key — create one in **Settings → Developers** (org admins
   only). See [Authentication](/authentication).
 
 ## How to use the MCP Server
 
 The server is published to npm and runs with `npx` — there is nothing to install
-or host. Replace `ei_live_xxxxxxxxx` with your own key throughout.
+or host. Replace `cq_live_xxxxxxxxx` with your own key throughout.
 
 It supports two transports: **stdio** (default, runs locally) and **HTTP**.
 
@@ -52,7 +52,7 @@ It supports two transports: **stdio** (default, runs locally) and **HTTP**.
 <Tabs>
   <Tab title="Claude Code">
     ```bash
-    claude mcp add equateit -e EQUATEIT_API_KEY=ei_live_xxxxxxxxx -- npx -y equateit-mcp
+    claude mcp add classquill -e CLASSQUILL_API_KEY=cq_live_xxxxxxxxx -- npx -y classquill-mcp
     ```
   </Tab>
   <Tab title="Cursor">
@@ -61,10 +61,10 @@ It supports two transports: **stdio** (default, runs locally) and **HTTP**.
     ```json
     {
       "mcpServers": {
-        "equateit": {
+        "classquill": {
           "command": "npx",
-          "args": ["-y", "equateit-mcp"],
-          "env": { "EQUATEIT_API_KEY": "ei_live_xxxxxxxxx" }
+          "args": ["-y", "classquill-mcp"],
+          "env": { "CLASSQUILL_API_KEY": "cq_live_xxxxxxxxx" }
         }
       }
     }
@@ -76,10 +76,10 @@ It supports two transports: **stdio** (default, runs locally) and **HTTP**.
     ```json
     {
       "mcpServers": {
-        "equateit": {
+        "classquill": {
           "command": "npx",
-          "args": ["-y", "equateit-mcp"],
-          "env": { "EQUATEIT_API_KEY": "ei_live_xxxxxxxxx" }
+          "args": ["-y", "classquill-mcp"],
+          "env": { "CLASSQUILL_API_KEY": "cq_live_xxxxxxxxx" }
         }
       }
     }
@@ -89,16 +89,22 @@ It supports two transports: **stdio** (default, runs locally) and **HTTP**.
     ```json
     {
       "mcpServers": {
-        "equateit": {
+        "classquill": {
           "command": "npx",
-          "args": ["-y", "equateit-mcp"],
-          "env": { "EQUATEIT_API_KEY": "ei_live_xxxxxxxxx" }
+          "args": ["-y", "classquill-mcp"],
+          "env": { "CLASSQUILL_API_KEY": "cq_live_xxxxxxxxx" }
         }
       }
     }
     ```
   </Tab>
 </Tabs>
+
+<Note>
+  Renamed from `equateit-mcp` (2026-09-21). Old configs using `equateit-mcp` /
+  `EQUATEIT_API_KEY` / an `ei_live_...` key keep working — see
+  [the package README](https://github.com/EquateItAu/classquill-app/tree/master/internal-mcp/public-api#back-compat-with-equateit-mcp).
+</Note>
 
 ### HTTP transport
 
@@ -108,7 +114,7 @@ client authenticates by passing its API key as a Bearer token.
 Start the server:
 
 ```bash
-npx -y equateit-mcp --http --port 3000
+npx -y classquill-mcp --http --port 3000
 ```
 
 It listens on `http://127.0.0.1:3000` and exposes the MCP endpoint at `/mcp`
@@ -117,16 +123,16 @@ using Streamable HTTP.
 <Tabs>
   <Tab title="Claude Code">
     ```bash
-    claude mcp add equateit --transport http http://127.0.0.1:3000/mcp --header "Authorization: Bearer ei_live_xxxxxxxxx"
+    claude mcp add classquill --transport http http://127.0.0.1:3000/mcp --header "Authorization: Bearer cq_live_xxxxxxxxx"
     ```
   </Tab>
   <Tab title="Cursor">
     ```json
     {
       "mcpServers": {
-        "equateit": {
+        "classquill": {
           "url": "http://127.0.0.1:3000/mcp",
-          "headers": { "Authorization": "Bearer ei_live_xxxxxxxxx" }
+          "headers": { "Authorization": "Bearer cq_live_xxxxxxxxx" }
         }
       }
     }
@@ -138,10 +144,10 @@ using Streamable HTTP.
 
 | Flag | Env var | Default | Purpose |
 |------|---------|---------|---------|
-| `--key` | `EQUATEIT_API_KEY` | — | Your `ei_live_...` key (stdio mode; HTTP mode reads the Bearer token per request). |
+| `--key` | `CLASSQUILL_API_KEY` | — | Your `cq_live_...` key (stdio mode; HTTP mode reads the Bearer token per request). `EQUATEIT_API_KEY` still works as a fallback. |
 | `--http` | — | off | Use HTTP transport instead of stdio. |
 | `--port` / `-p` | `MCP_PORT` | `3000` | HTTP port. |
-| — | `EQUATEIT_API_BASE_URL` | production | Backend base URL. Override to target staging. |
+| — | `CLASSQUILL_API_BASE_URL` | production | Backend base URL. Override to target staging. `EQUATEIT_API_BASE_URL` still works as a fallback. |
 
 <Info>
   The MCP server is a thin client over the REST API — all access control,

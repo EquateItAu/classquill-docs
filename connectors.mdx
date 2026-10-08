@@ -11,7 +11,7 @@ ClassQuill runs a hosted [MCP](/connect-ai-tools) server at:
 https://mcp.classquill.com/mcp
 ```
 
-It is the same read-only, org-scoped server as the [`equateit-mcp`](/connect-ai-tools) npm
+It is the same read-only, org-scoped server as the [`classquill-mcp`](/connect-ai-tools) npm
 package, but hosted for you as a remote **Streamable HTTP** endpoint — so any
 AI tool can connect over the network without installing anything. It is a thin
 proxy to the [ClassQuill public API](/introduction): all access control,
@@ -22,7 +22,7 @@ There are **two ways to authenticate**, depending on the client:
 | Method | Best for | What you provide |
 |--------|----------|------------------|
 | **OAuth** | claude.ai custom connectors (web) | Nothing — you log in through Claude |
-| **API key** (`Authorization: Bearer ei_live_...`) | Codex, Composio, Claude Code, and most other clients | An [API key](/authentication) as a Bearer token |
+| **API key** (`Authorization: Bearer cq_live_...`) | Codex, Composio, Claude Code, and most other clients | An [API key](/authentication) as a Bearer token |
 
 <Info>
   Both paths reach the same read-only tools. OAuth exists because claude.ai's
@@ -66,14 +66,14 @@ an authorization-code + PKCE flow. This is all automatic — you only click
 ## Codex
 
 Add the hosted server to your Codex MCP configuration with your API key as a
-Bearer token. Replace `ei_live_xxxxxxxxx` with your own key.
+Bearer token. Replace `cq_live_xxxxxxxxx` with your own key.
 
 ```toml
 [mcp_servers.classquill]
 url = "https://mcp.classquill.com/mcp"
 
 [mcp_servers.classquill.headers]
-Authorization = "Bearer ei_live_xxxxxxxxx"
+Authorization = "Bearer cq_live_xxxxxxxxx"
 ```
 
 ## Composio
@@ -86,7 +86,7 @@ authorization header to your API key.
   "name": "classquill",
   "url": "https://mcp.classquill.com/mcp",
   "headers": {
-    "Authorization": "Bearer ei_live_xxxxxxxxx"
+    "Authorization": "Bearer cq_live_xxxxxxxxx"
   }
 }
 ```
@@ -97,7 +97,7 @@ Claude Code connects to the hosted endpoint over HTTP with your API key in the
 `Authorization` header — no OAuth needed.
 
 ```bash
-claude mcp add classquill --transport http https://mcp.classquill.com/mcp --header "Authorization: Bearer ei_live_xxxxxxxxx"
+claude mcp add classquill --transport http https://mcp.classquill.com/mcp --header "Authorization: Bearer cq_live_xxxxxxxxx"
 ```
 
 ## Any other MCP client
@@ -107,13 +107,13 @@ Bearer token on each request:
 
 ```
 POST https://mcp.classquill.com/mcp
-Authorization: Bearer ei_live_xxxxxxxxx
+Authorization: Bearer cq_live_xxxxxxxxx
 ```
 
 ## Prefer to run it yourself?
 
 If you would rather run the server locally (stdio, or your own HTTP host)
-instead of using the hosted endpoint, use the [`equateit-mcp`](/connect-ai-tools) npm package
+instead of using the hosted endpoint, use the [`classquill-mcp`](/connect-ai-tools) npm package
 — same tools, same read-only access.
 
 <Info>

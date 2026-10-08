@@ -6,7 +6,7 @@ description: "Get a signed HTTP POST the moment something happens in your organi
 ## What are webhooks?
 
 Instead of polling the [REST API](/introduction) on a cron, register a webhook
-endpoint and EquateIt will **POST a signed event to your URL** the moment
+endpoint and ClassQuill will **POST a signed event to your URL** the moment
 something changes — a session completes, a payment lands, an invoice is paid, a
 lead arrives. Pipe those events straight into your CRM, Zapier/Make, Slack, or a
 data warehouse.
@@ -76,9 +76,9 @@ resource shape (e.g. `session.*` → the [Session](/introduction) object).
 
 | Header | Meaning |
 |---|---|
-| `EquateIt-Signature` | `t=<unix_ts>,v1=<hex hmac_sha256>` — see below |
-| `EquateIt-Event-Id` | `evt_<uuid>` — stable across redeliveries; use it to dedupe |
-| `EquateIt-Event-Type` | the event `type` |
+| `ClassQuill-Signature` | `t=<unix_ts>,v1=<hex hmac_sha256>` — see below |
+| `ClassQuill-Event-Id` | `evt_<uuid>` — stable across redeliveries; use it to dedupe |
+| `ClassQuill-Event-Type` | the event `type` |
 
 ## Verify the signature
 
@@ -143,7 +143,7 @@ timeout) is treated as a failure and retried.
 ## Idempotency & ordering
 
 Delivery is **at-least-once** and may arrive **out of order**. Dedupe on
-`EquateIt-Event-Id` — it is stable across automatic retries and manual
+`ClassQuill-Event-Id` — it is stable across automatic retries and manual
 redeliveries of the same event.
 
 ## Retries

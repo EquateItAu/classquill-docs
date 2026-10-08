@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "ClassQuill Public API",
-    "description": "REST API for ClassQuill tutoring organisations. Pipe your sessions, invoices, payments, tutor earnings, students, and more into your own tools. Most endpoints are reads; a focused set of writes (each gated by a *:write scope) create or update data, including creating student/tutor/parent accounts.\n\nAuthenticate every request with an org API key:\n\n    Authorization: Token token=ei_live_...\n\nMint keys in the ClassQuill app under Settings \u2192 Developers.",
+    "description": "REST API for ClassQuill tutoring organisations. Pipe your sessions, invoices, payments, tutor earnings, students, and more into your own tools. Most endpoints are reads; a focused set of writes (each gated by a *:write scope) create or update data, including creating student/tutor/parent accounts.\n\nAuthenticate every request with an org API key:\n\n    Authorization: Token token=cq_live_...\n\nMint keys in the ClassQuill app under Settings \u2192 Developers.",
     "version": "1.0.0"
   },
   "paths": {
@@ -74,7 +74,7 @@
           "General"
         ],
         "summary": "Get Me",
-        "description": "Return the identity of the authenticated org.\n\nWorks with both API key (Token token=ei_live_...) and OAuth 2 Bearer tokens.\nZapier calls this endpoint after authentication to confirm the connection and\ndisplay the connected account label.\n\nReturns 401 if the credential is missing, invalid, revoked, or expired.",
+        "description": "Return the identity of the authenticated org.\n\nWorks with both API key (Token token=cq_live_...) and OAuth 2 Bearer tokens.\nZapier calls this endpoint after authentication to confirm the connection and\ndisplay the connected account label.\n\nReturns 401 if the credential is missing, invalid, revoked, or expired.",
         "operationId": "get_me_v1_me_get",
         "responses": {
           "200": {
@@ -3648,7 +3648,7 @@
           "Coursework"
         ],
         "summary": "List Homework",
-        "description": "List homework assignments set by the org's tutors (most recent first).\n\nScoped by `homework_assignments.organization_id`, derived from each assignment's\nscope at creation (classroom \u2192 group \u2192 tutor-student relationship \u2192 single-org\nauthor, WS-3B) \u2014 containing a multi-org tutor to this org's rows.",
+        "description": "List assessments assigned by the org's tutors (most recent first).\n\nOne row per `assessment_assignments` row \u2014 a paper assigned to two classrooms is\ntwo homework rows with two due dates. Scoped by the assignment's TARGET (the\norg's classrooms, its groups, and its affiliated students for 1:1 rows) rather\nthan a stamped org column: `assessment_assignments` has none, and the paper's\n`assessments.org_id` is only set for org-tier papers, so a classroom paper\nauthored inside an org classroom would otherwise vanish from this list. Same\nid sets `_org_scope` computes for every other cross-org read. A student-scope\n(1:1) row additionally requires `assigned_by` to be one of the org's staff, so\nanother tutor's private work for a shared student never lists here (F4).\n\n`homework_type` is the paper's `kind` \u2014 a label, six values, never a behaviour.",
         "operationId": "list_homework_v1_homework_get",
         "parameters": [
           {
@@ -3664,10 +3664,10 @@
                   "type": "null"
                 }
               ],
-              "description": "text or exam",
+              "description": "quiz, homework, test, exam, practice, diagnostic",
               "title": "Homework Type"
             },
-            "description": "text or exam"
+            "description": "quiz, homework, test, exam, practice, diagnostic"
           },
           {
             "name": "scope",
@@ -4437,7 +4437,7 @@
           "Coursework"
         ],
         "summary": "List Results",
-        "description": "List assessment results (exam attempts) for the org's students, newest first.\n\nCovers every attempt mode (VCE exam, topic practice, SAC, homework), each with\nits `grade`. `exam_attempts` has no org column, so results are scoped to the\norg's students (those with a session under it). The optional `from`/`to` range\nfilters on completion date.",
+        "description": "List assessment results (`assessment_attempts`) for the org's students, newest first.\n\nCovers every attempt \u2014 an assigned paper (`mode = homework`, carrying\n`homework_assignment_id`) and a self-directed sitting (`mode` = its kind:\ntopic_practice, diagnostic, smart_review, saved_review, ai_practice). `grade` is\nthe attempt's percentage score, null until marked. `status` uses the /v1\nvocabulary: `completed` is the table's `submitted`; `expired` (timed out) and\n`discarded` (walked away with nothing written) are new. `assessment_attempts`\nhas no org column, so results are scoped to the org's students. The optional\n`from`/`to` range filters on completion date.",
         "operationId": "list_results_v1_results_get",
         "parameters": [
           {
@@ -4471,10 +4471,10 @@
                   "type": "null"
                 }
               ],
-              "description": "not_started, in_progress, submitted, completed",
+              "description": "not_started, in_progress, completed, expired, discarded",
               "title": "Status"
             },
-            "description": "not_started, in_progress, submitted, completed"
+            "description": "not_started, in_progress, completed, expired, discarded"
           },
           {
             "name": "mode",
@@ -4489,10 +4489,10 @@
                   "type": "null"
                 }
               ],
-              "description": "vce_exam, topic_practice, sac, homework",
+              "description": "homework, topic_practice, diagnostic, \u2026",
               "title": "Mode"
             },
-            "description": "vce_exam, topic_practice, sac, homework"
+            "description": "homework, topic_practice, diagnostic, \u2026"
           },
           {
             "name": "from",
@@ -12902,7 +12902,8 @@
                 "type": "null"
               }
             ],
-            "title": "Homework Type"
+            "title": "Homework Type",
+            "description": "The paper's kind: quiz, homework, test, exam, practice or diagnostic."
           },
           "scope": {
             "anyOf": [
@@ -12981,7 +12982,8 @@
         "required": [
           "id"
         ],
-        "title": "Homework"
+        "title": "Homework",
+        "description": "One assignment of a paper to a classroom, group or student. Since phase 3 this\nis an `assessment_assignments` row joined to its `assessments` paper \u2014 a paper\nassigned to two classrooms is two rows with two due dates."
       },
       "Invite": {
         "properties": {
@@ -17277,7 +17279,8 @@
                 "type": "null"
               }
             ],
-            "title": "Status"
+            "title": "Status",
+            "description": "not_started, in_progress, completed (the attempt was handed in), expired (the time limit ran out) or discarded (expired with nothing written \u2014 never scored)."
           },
           "grade": {
             "anyOf": [
@@ -17288,7 +17291,8 @@
                 "type": "null"
               }
             ],
-            "title": "Grade"
+            "title": "Grade",
+            "description": "Percentage score, 0\u2013100. Null until every part is marked."
           },
           "mode": {
             "anyOf": [
@@ -17299,7 +17303,8 @@
                 "type": "null"
               }
             ],
-            "title": "Mode"
+            "title": "Mode",
+            "description": "homework for an assigned paper (see homework_assignment_id); for a self-directed sitting the kind: topic_practice, diagnostic, smart_review, saved_review, ai_practice. vce_exam and sac are retired."
           },
           "vce_exam_id": {
             "anyOf": [
@@ -17310,7 +17315,8 @@
                 "type": "null"
               }
             ],
-            "title": "Vce Exam Id"
+            "title": "Vce Exam Id",
+            "description": "Always null \u2014 the VCE past-paper library was retired."
           },
           "curriculum_level_id": {
             "anyOf": [
@@ -17332,7 +17338,8 @@
                 "type": "null"
               }
             ],
-            "title": "Homework Assignment Id"
+            "title": "Homework Assignment Id",
+            "description": "The /v1/homework row this attempt was sat against; null for a self-directed sitting."
           },
           "started_at": {
             "anyOf": [
@@ -17361,7 +17368,8 @@
         "required": [
           "id"
         ],
-        "title": "Result"
+        "title": "Result",
+        "description": "One assessment attempt. Since phase 3 this is an `assessment_attempts` row \u2014\nthe field names are unchanged; see each description for what moved."
       },
       "ScoreBreakdown": {
         "properties": {
@@ -18964,7 +18972,7 @@
         "type": "apiKey",
         "in": "header",
         "name": "Authorization",
-        "description": "Org API key as `Token token=ei_live_...`"
+        "description": "Org API key as `Token token=cq_live_...`"
       }
     }
   },

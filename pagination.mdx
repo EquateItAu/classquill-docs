@@ -108,12 +108,12 @@ until it comes back `null`:
 ```bash
 # page 1
 curl "https://api.classquill.com/v1/payments?limit=100&cursor=start" \
-  -H "Authorization: Token token=ei_live_..."
+  -H "Authorization: Token token=cq_live_..."
 # → meta: { "limit": 100, "count": 100, "next_cursor": "eyJrIjoi..." }
 
 # page 2 (and onwards, until next_cursor is null)
 curl "https://api.classquill.com/v1/payments?limit=100&cursor=eyJrIjoi..." \
-  -H "Authorization: Token token=ei_live_..."
+  -H "Authorization: Token token=cq_live_..."
 ```
 
 On endpoints whose default order is already newest-created-first (most of them), a full
