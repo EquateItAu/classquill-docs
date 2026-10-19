@@ -75,7 +75,8 @@
           {
             "group": "Courses & Content",
             "pages": [
-              "guides/courses/building-a-course"
+              "guides/courses/building-a-course",
+              "guides/courses/paper-studio"
             ]
           },
           {
