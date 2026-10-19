@@ -23,6 +23,10 @@ ClassQuill plays SCORM 1.2 and SCORM 2004 modules: the `.zip` packages you expor
   </Step>
 </Steps>
 
+<Warning>
+  ClassQuill plays **one module per package**. A package that holds more than one module (SCO) is refused at upload. Export each module from your authoring tool as its own package and upload them separately.
+</Warning>
+
 ## Set a minimum time
 
 Each package has a **Minimum time (minutes)**. If a learner completes the module faster than this, the completion still counts, but it's flagged for you to review. ClassQuill measures time itself. It doesn't rely on the time the module reports. Set it to `0` to turn this check off.
@@ -50,6 +54,7 @@ Learners click **Start module**. The module opens in a full-screen player. It ru
 
 - Progress saves as they go. They can close the module and **Resume** later from where they left off.
 - The lesson is marked complete when the module reports it is finished (or passed). There's no "Mark complete" tick on a SCORM lesson.
+- If the package sets a pass mark, ClassQuill applies it whenever the module reports a score. A score below the pass mark is recorded as **failed**, not complete. This works for both SCORM 1.2 (mastery score) and SCORM 2004 (minimum normalised measure).
 - If the same module is opened in another tab, the older tab stops saving and tells the learner to continue in the newer one.
 
 ## Upload a new version
