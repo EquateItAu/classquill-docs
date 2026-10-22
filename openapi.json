@@ -5590,7 +5590,7 @@
           "General"
         ],
         "summary": "Add Student To Group",
-        "description": "Enrol an existing org member as a student in a group. Also ensures the student\nhas an accepted row on the group's parent classroom. Idempotent.",
+        "description": "Enrol an existing org member as a student in a group. Writes an accepted row on\nthe group's parent classroom first if the student has none there. If their classroom\nplace is still pending, the group place is held: status is \"pending\", and it becomes\n\"accepted\" automatically when the classroom place is approved. A student who left or\nwas removed from the classroom is refused with 422; re-add them to the classroom\nfirst. Idempotent.",
         "operationId": "add_student_to_group_v1_groups__group_id__students_post",
         "parameters": [
           {
@@ -14389,6 +14389,17 @@
               }
             ],
             "title": "Member Id"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
           }
         },
         "type": "object",
@@ -16598,6 +16609,9 @@
             "anyOf": [
               {
                 "type": "integer"
+              },
+              {
+                "type": "number"
               },
               {
                 "type": "null"
