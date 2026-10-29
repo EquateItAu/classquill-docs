@@ -3298,6 +3298,389 @@
         }
       }
     },
+    "/v1/curriculum/subjects": {
+      "get": {
+        "tags": [
+          "General"
+        ],
+        "summary": "List Registry Subjects",
+        "description": "The subject registry visible to your org: platform subjects plus any your org created.\n\nEach entry gives the `subject_id` to send when creating questions and whether a\ncurriculum tree exists (`GET /v1/curriculum/items?subject_id=...`). Active subjects\nonly unless `include_inactive`. Ordered by label then id.",
+        "operationId": "list_registry_subjects_v1_curriculum_subjects_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive match on the subject label.",
+              "title": "Q"
+            },
+            "description": "Case-insensitive match on the subject label."
+          },
+          {
+            "name": "has_curriculum",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only subjects that do (true) or do not (false) have a curriculum tree.",
+              "title": "Has Curriculum"
+            },
+            "description": "Only subjects that do (true) or do not (false) have a curriculum tree."
+          },
+          {
+            "name": "include_inactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include deactivated subjects.",
+              "default": false,
+              "title": "Include Inactive"
+            },
+            "description": "Include deactivated subjects."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_RegistrySubject_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error \u2014 `error.details.errors` lists the fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed, revoked, or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the scope this endpoint requires.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 honour Retry-After and the RateLimit-* headers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/curriculum/items": {
+      "get": {
+        "tags": [
+          "General"
+        ],
+        "summary": "List Curriculum Items",
+        "description": "Browse a subject's curriculum tree to find the `curriculum_item_id` for a question part.\n\nItems are in tree order (depth-first, siblings by their curriculum order, ties by id), so\na page reads like the syllabus. `parent_id` narrows to one item's direct children: walk\ndown from the top level to the right topic. Items belonging to another organisation are\nnever listed. An unknown, inactive or tree-less subject returns 404.",
+        "operationId": "list_curriculum_items_v1_curriculum_items_get",
+        "parameters": [
+          {
+            "name": "subject_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Subject from `GET /v1/curriculum/subjects`.",
+              "title": "Subject Id"
+            },
+            "description": "Subject from `GET /v1/curriculum/subjects`."
+          },
+          {
+            "name": "parent_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only the direct children of this item.",
+              "title": "Parent Id"
+            },
+            "description": "Only the direct children of this item."
+          },
+          {
+            "name": "level_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "e.g. area, topic, subtopic.",
+              "title": "Level Type"
+            },
+            "description": "e.g. area, topic, subtopic."
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive match on name, label or aliases.",
+              "title": "Q"
+            },
+            "description": "Case-insensitive match on name, label or aliases."
+          },
+          {
+            "name": "include_retired",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include retired and merged items.",
+              "default": false,
+              "title": "Include Retired"
+            },
+            "description": "Include retired and merged items."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_CurriculumItem_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error \u2014 `error.details.errors` lists the fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed, revoked, or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the scope this endpoint requires.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 honour Retry-After and the RateLimit-* headers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/curriculum/items/{item_id}": {
+      "get": {
+        "tags": [
+          "General"
+        ],
+        "summary": "Get Curriculum Item",
+        "description": "One curriculum item with its `children_count` and owning `subject_id`.\n\nIf the item was merged into another, the canonical item is returned and\n`merged_from_id` carries the id you asked for. Items from other organisations, and\nunknown ids, return the same 404.",
+        "operationId": "get_curriculum_item_v1_curriculum_items__item_id__get",
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurriculumItemDetail"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error \u2014 `error.details.errors` lists the fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed, revoked, or expired credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the scope this endpoint requires.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded \u2014 honour Retry-After and the RateLimit-* headers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found \u2014 the record doesn't exist or belongs to another organisation.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/v1/lesson-plans": {
       "get": {
         "tags": [
@@ -6675,7 +7058,7 @@
           "General"
         ],
         "summary": "Org Join Link",
-        "description": "The org's reusable self-signup join links + codes (student + tutor). Share these via\nFacebook/Instagram/WhatsApp \u2014 anyone who opens one is added to your org when they sign up, no\nemail needed from you. READ-ONLY: returns the existing codes (a field is null if that code\nhasn't been minted yet \u2014 call POST /v1/invites {scope:\"organization\"} to mint one). This GET\nnever writes, so it's safe under the read scope.",
+        "description": "The org's reusable self-signup join links + codes (student + tutor). Share these via\nFacebook/Instagram/WhatsApp \u2014 anyone who opens one is added to your org when they sign up, no\nemail needed from you. Returns the existing codes (a field is null if that code hasn't been\nminted yet \u2014 call POST /v1/invites {scope:\"organization\"} to mint one). Requires\n`invites:write` even though it never writes: the tutor code grants STAFF membership, so\nhanding it out is an access grant, not a read \u2014 a `read` key must not be able to turn\nitself into an org seat.",
         "operationId": "org_join_link_v1_org_join_link_get",
         "responses": {
           "200": {
@@ -12601,6 +12984,168 @@
         "title": "CoverageSummaryResult",
         "description": "Counts for /v1/coverage/summary. `covering_area` is the subset of `total`\nwithin reach of `postcode` (equals `total` when no postcode is supplied \u2014\ngeography is then ignored). A tutor offering 'both' modes counts toward both\n`in_person` and `online`."
       },
+      "CurriculumItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Send as `curriculum_item_id` on a question part."
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "level_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level Type",
+            "description": "e.g. area, topic, subtopic."
+          },
+          "depth": {
+            "type": "integer",
+            "title": "Depth",
+            "description": "0 is the subject root (never listed); its children are 1."
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path",
+            "description": "Dotted tree path, when the item has one."
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "retired": {
+            "type": "boolean",
+            "title": "Retired",
+            "description": "Retired or merged items cannot be attached to questions."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "depth",
+          "retired"
+        ],
+        "title": "CurriculumItem",
+        "description": "One node of a subject's curriculum tree."
+      },
+      "CurriculumItemDetail": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Send as `curriculum_item_id` on a question part."
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "level_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level Type",
+            "description": "e.g. area, topic, subtopic."
+          },
+          "depth": {
+            "type": "integer",
+            "title": "Depth",
+            "description": "0 is the subject root (never listed); its children are 1."
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path",
+            "description": "Dotted tree path, when the item has one."
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "retired": {
+            "type": "boolean",
+            "title": "Retired",
+            "description": "Retired or merged items cannot be attached to questions."
+          },
+          "children_count": {
+            "type": "integer",
+            "title": "Children Count"
+          },
+          "home_subject_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Home Subject Id",
+            "description": "Subject of the curriculum document this item lives in. It can differ from the subject you browse by (e.g. vic_maths_2 items report acara_y2_maths)."
+          },
+          "merged_from_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Merged From Id",
+            "description": "Set when the id you asked for was merged into this item: the response is the canonical item, and this is the id you requested."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "depth",
+          "retired",
+          "children_count"
+        ],
+        "title": "CurriculumItemDetail"
+      },
       "ExpenseClaim": {
         "properties": {
           "id": {
@@ -15206,6 +15751,26 @@
         ],
         "title": "Page[CoverageGapItem]"
       },
+      "Page_CurriculumItem_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/CurriculumItem"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PageMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "Page[CurriculumItem]"
+      },
       "Page_ExpenseClaim_": {
         "properties": {
           "data": {
@@ -15545,6 +16110,26 @@
           "meta"
         ],
         "title": "Page[RateCell]"
+      },
+      "Page_RegistrySubject_": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/RegistrySubject"
+            },
+            "type": "array",
+            "title": "Data"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PageMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "Page[RegistrySubject]"
       },
       "Page_Resource_": {
         "properties": {
@@ -16664,13 +17249,26 @@
           "intro_text": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 20000
               },
               {
                 "type": "null"
               }
             ],
             "title": "Intro Text"
+          },
+          "subject_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id",
+            "description": "Subject from `GET /v1/subjects`, e.g. 'vce_methods_34'. Required."
           },
           "topic": {
             "anyOf": [
@@ -16682,15 +17280,28 @@
               }
             ],
             "title": "Topic",
-            "description": "math_level_id, e.g. 'methods_34'"
+            "description": "Deprecated alias of `subject_id`. One of the two is required.",
+            "deprecated": true
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "generated",
+              "imported"
+            ],
+            "title": "Origin",
+            "description": "'generated' for AI-written questions, 'imported' for existing material.",
+            "default": "imported"
           },
           "tags": {
             "anyOf": [
               {
                 "items": {
-                  "type": "string"
+                  "type": "string",
+                  "maxLength": 50
                 },
-                "type": "array"
+                "type": "array",
+                "maxItems": 20
               },
               {
                 "type": "null"
@@ -16703,6 +17314,7 @@
               "$ref": "#/components/schemas/QuestionPartCreate"
             },
             "type": "array",
+            "maxItems": 20,
             "minItems": 1,
             "title": "Parts"
           }
@@ -16719,13 +17331,15 @@
         "properties": {
           "content": {
             "type": "string",
+            "maxLength": 20000,
             "minLength": 1,
             "title": "Content"
           },
           "label": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 20
               },
               {
                 "type": "null"
@@ -16747,13 +17361,16 @@
           "marks": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Marks"
+            "title": "Marks",
+            "description": "0 to 100, at most two decimal places."
           },
           "difficulty": {
             "anyOf": [
@@ -16774,7 +17391,8 @@
           "answer": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 20000
               },
               {
                 "type": "null"
@@ -16785,7 +17403,8 @@
           "solution": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "maxLength": 20000
               },
               {
                 "type": "null"
@@ -16801,25 +17420,52 @@
           "mcq_options": {
             "anyOf": [
               {
-                "items": {},
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "additionalProperties": true,
+                      "type": "object"
+                    }
+                  ]
+                },
                 "type": "array"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Mcq Options"
+            "title": "Mcq Options",
+            "description": "Multiple-choice options (requires `is_multi_choice: true`): 2 to 10 objects `{id, text, image_url?, correct?}`, or plain strings (lettered A, B, C... for you). If any option carries `correct`, exactly one must be true."
           },
-          "curriculum_level_id": {
+          "curriculum_item_id": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "uuid"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Curriculum Level Id"
+            "title": "Curriculum Item Id",
+            "description": "Curriculum item (from `GET /v1/curriculum/items`) in the question's subject tree. When every part has one, no automatic topic classification runs."
+          },
+          "curriculum_level_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Curriculum Level Id",
+            "description": "Deprecated alias of `curriculum_item_id`.",
+            "deprecated": true
           }
         },
         "additionalProperties": false,
@@ -17132,6 +17778,68 @@
           "data"
         ],
         "title": "RecommendedTutors"
+      },
+      "RegistrySubject": {
+        "properties": {
+          "subject_id": {
+            "type": "string",
+            "title": "Subject Id",
+            "description": "Send as `subject_id` when creating questions."
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label",
+            "description": "Display name of the subject."
+          },
+          "curriculum_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Curriculum Code"
+          },
+          "is_platform": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Platform",
+            "description": "True for a platform subject, false for one your organisation created."
+          },
+          "has_curriculum": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Has Curriculum",
+            "description": "True when the subject has a curriculum tree to browse via `GET /v1/curriculum/items`."
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject_id"
+        ],
+        "title": "RegistrySubject",
+        "description": "A subject from the registry, as listed by `GET /v1/curriculum/subjects`."
       },
       "Resource": {
         "properties": {

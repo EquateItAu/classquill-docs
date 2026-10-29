@@ -1,6 +1,6 @@
 ---
 title: "MCP Server"
-description: "Give AI tools read-only access to your ClassQuill data using natural language."
+description: "Give AI tools access to your ClassQuill data using natural language."
 ---
 
 ## What is an MCP Server?
@@ -9,8 +9,8 @@ MCP is an open protocol that standardizes how applications provide context to
 LLMs. Among other benefits, it gives LLMs tools to act on your behalf.
 
 The ClassQuill MCP server lets MCP-aware tools — Claude Code, Claude Desktop,
-Cursor, Windsurf and others — read your organisation's tutoring data through the
-[ClassQuill public API](/introduction). It is **read-only** and scoped to your
+Cursor, Windsurf and others — read and, with a write-scoped key, update your organisation's tutoring data through the
+[ClassQuill public API](/introduction). Write tools need an API key with write scopes (the hosted OAuth connector is still read-only). It is scoped to your
 org, exactly like the REST API.
 
 <Tip>
@@ -22,7 +22,7 @@ org, exactly like the REST API.
 
 ## What it can do
 
-One tool per public endpoint, all read-only:
+One tool per public endpoint (write tools need a write-scoped key):
 
 - **Sessions** — list and fetch tutoring sessions
 - **Tutors** — list tutors and pull per-tutor earnings
@@ -152,5 +152,5 @@ using Streamable HTTP.
 <Info>
   The MCP server is a thin client over the REST API — all access control,
   org-scoping and [rate limits](/rate-limits) are enforced by the API itself.
-  A key used here has the same read-only access it does everywhere.
+  A key used here has the same scopes it does everywhere.
 </Info>
