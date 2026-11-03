@@ -62,7 +62,8 @@
             "group": "Student Portal",
             "pages": [
               "guides/student-portal/what-parents-students-see",
-              "guides/student-portal/progress-reports"
+              "guides/student-portal/progress-reports",
+              "guides/student-portal/mastery-scales"
             ]
           },
           {
