@@ -910,7 +910,7 @@
           "Students & Parents"
         ],
         "summary": "Bulk Invite Users",
-        "description": "Bulk create/invite 1\u2013100 users \u2014 students (optionally each with a parent), tutors,\nand parents \u2014 in one call. Each row carries a `type` discriminator.\n\nAuth is all-or-nothing: the key must hold every scope the batch's row types require\n(`students:write` for student/parent rows, `tutors:write` for tutor rows) or the whole\nrequest is 403. Provisioning is then per-row and independent \u2014 one row's failure never\nrolls back the others. Each input row maps to one `results[]` entry (same order, by\n`index`) with a `status`:\n  - `ok`     \u2014 newly provisioned (`created` = whether a new login was made)\n  - `exists` \u2014 already an accepted member of this org (idempotent no-op)\n  - `error`  \u2014 could not provision (`error` carries a human-readable reason)\n\nHonours `Idempotency-Key` (the whole batch result is replayed on retry).",
+        "description": "Bulk create/invite 1\u2013100 users \u2014 students (optionally each with a parent), tutors,\nand parents \u2014 in one call. Each row carries a `type` discriminator.\n\nAuth is all-or-nothing: the key must hold every scope the batch's row types require\n(`students:write` for student/parent rows, `tutors:write` for tutor rows) or the whole\nrequest is 403. Provisioning is then per-row and independent \u2014 one row's failure never\nrolls back the others. Each input row maps to one `results[]` entry (same order, by\n`index`) with a `status`:\n  - `ok`     \u2014 newly provisioned (`created` = whether a new login was made)\n  - `exists` \u2014 already an accepted member of this org (idempotent no-op)\n  - `invited` \u2014 the email belongs to an existing account your org may not add directly\n    (it belongs to another organisation, or is any existing tutor), so it was sent an\n    invite to accept; nothing else was created and no `id` is returned\n  - `invite_unredeemable` \u2014 such an account could never accept the invite (e.g. not a\n    tutor account); nothing was sent and `error` says why\n  - `error`  \u2014 could not provision (`error` carries a human-readable reason)\n\nHonours `Idempotency-Key` (the whole batch result is replayed on retry).",
         "operationId": "bulk_invite_users_v1_users_bulk_invite_post",
         "parameters": [
           {
@@ -12329,6 +12329,8 @@
             "enum": [
               "ok",
               "exists",
+              "invited",
+              "invite_unredeemable",
               "error"
             ],
             "title": "Status"
@@ -12385,7 +12387,7 @@
           "status"
         ],
         "title": "BulkInviteResultItem",
-        "description": "The outcome of one bulk-invite row, positionally aligned to the request `users`\narray by `index`. `status`: `ok` = newly provisioned (`created` says whether a new\nlogin was made), `exists` = already an accepted member of this org (idempotent\nno-op), `error` = could not provision (`error` carries the reason)."
+        "description": "The outcome of one bulk-invite row, positionally aligned to the request `users`\narray by `index`. `status`: `ok` = newly provisioned (`created` says whether a new\nlogin was made), `exists` = already an accepted member of this org (idempotent\nno-op), `invited` = an existing account your org may not add directly was sent an\ninvite to accept (no `id`), `invite_unredeemable` = such an account could never accept\none (`error` says why), `error` = could not provision (`error` carries the reason)."
       },
       "BulkInviteStudent": {
         "properties": {
@@ -12476,11 +12478,16 @@
             "type": "integer",
             "title": "Created",
             "default": 0
+          },
+          "invited": {
+            "type": "integer",
+            "title": "Invited",
+            "default": 0
           }
         },
         "type": "object",
         "title": "BulkInviteSummary",
-        "description": "Roll-up counts for a bulk invite (`ok` + `exists` + `errors` == `total`)."
+        "description": "Roll-up counts for a bulk invite (`ok` + `exists` + `invited` + `errors` == `total`;\nan `invite_unredeemable` row counts as an error)."
       },
       "BulkInviteTutor": {
         "properties": {
